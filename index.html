@@ -1,5 +1,331 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  ...
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 할 일</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#7bcfa3" />
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #eaf5ef;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+      background: #f7fbf9;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      margin: 0 0 10px 0;
+    }
+
+    .counter {
+      text-align: center;
+      font-size: 14px;
+      color: #4f7f69;
+      margin-bottom: 12px;
+    }
+
+    .date-picker {
+      width: 100%;
+      padding: 12px;
+      border-radius: 999px;
+      border: 1px solid #cfe6d8;
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: #2f7d5b;
+      background: #fff;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 999px;
+      border: 1px solid #cfe6d8;
+      font-size: 16px;
+      background: #ffffff;
+      outline: none;
+    }
+
+    button {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 999px;
+      background: #7bcfa3;
+      color: #ffffff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .clear-completed {
+      width: 100%;
+      margin-bottom: 14px;
+      padding: 12px;
+      border-radius: 999px;
+      border: none;
+      background: #dff2e8;
+      color: #3f7f5f;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 12px;
+      border-bottom: 1px solid #e3efe9;
+      gap: 6px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .task span {
+      font-size: 16px;
+      word-break: break-word;
+    }
+
+    .completed span {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    .important span {
+      font-weight: 600;
+      color: #c89b00;
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #f2c94c;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #ff5b5b;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .edit-input {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #cfe6d8;
+    }
+
+    .hint {
+      text-align: center;
+      color: #6a8a7a;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <h1>📝 오늘의 할 일</h1>
+    <div class="counter" id="counter">남은 할 일: 0개</div>
+
+    <input type="date" id="datePicker" class="date-picker" />
+
+    <div class="input-row">
+      <input id="todoInput" type="text" placeholder="할 일을 입력하세요" />
+      <button id="addBtn">추가</button>
+    </div>
+
+    <button class="clear-completed" id="clearCompletedBtn">완료된 항목 모두 삭제</button>
+
+    <ul id="todoList"></ul>
+
+    <div class="hint">팁: 할 일을 더블 클릭하면 수정할 수 있어요</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "todos_v1";
+
+    const input = document.getElementById("todoInput");
+    const list = document.getElementById("todoList");
+    const counter = document.getElementById("counter");
+    const datePicker = document.getElementById("datePicker");
+    const addBtn = document.getElementById("addBtn");
+    const clearCompletedBtn = document.getElementById("clearCompletedBtn");
+
+    const today = new Date().toISOString().split("T")[0];
+    datePicker.value = today;
+
+    let todos = [];
+
+    function saveTodos() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+
+    function loadTodos() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          todos = JSON.parse(saved);
+        } catch {
+          todos = [];
+        }
+      }
+    }
+
+    function getVisibleTodos() {
+      return todos.filter(t => t.date === datePicker.value);
+    }
+
+    function updateCounter() {
+      const count = getVisibleTodos().filter(t => !t.completed).length;
+      counter.textContent = `남은 할 일: ${count}개`;
+    }
+
+    function render() {
+      list.innerHTML = "";
+      getVisibleTodos().forEach(t => {
+        const li = document.createElement("li");
+        if (t.completed) li.classList.add("completed");
+        if (t.important) li.classList.add("important");
+
+        const task = document.createElement("div");
+        task.className = "task";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = t.completed;
+        checkbox.onchange = () => {
+          t.completed = checkbox.checked;
+          saveTodos();
+          render();
+        };
+
+        const span = document.createElement("span");
+        span.textContent = t.text;
+
+        span.ondblclick = () => editTodo(t, span);
+
+        task.appendChild(checkbox);
+        task.appendChild(span);
+
+        const star = document.createElement("button");
+        star.className = "star-btn";
+        star.textContent = t.important ? "★" : "☆";
+        star.onclick = () => {
+          t.important = !t.important;
+          saveTodos();
+          render();
+        };
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.textContent = "✕";
+        del.onclick = () => {
+          todos = todos.filter(x => x !== t);
+          saveTodos();
+          render();
+        };
+
+        li.append(task, star, del);
+        list.appendChild(li);
+      });
+
+      updateCounter();
+    }
+
+    function editTodo(todo, span) {
+      const input = document.createElement("input");
+      input.className = "edit-input";
+      input.value = todo.text;
+
+      span.replaceWith(input);
+      input.focus();
+
+      input.onblur = () => {
+        todo.text = input.value.trim() || todo.text;
+        saveTodos();
+        render();
+      };
+
+      input.onkeydown = e => {
+        if (e.key === "Enter") input.blur();
+        if (e.key === "Escape") render();
+      };
+    }
+
+    function addTodo() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      todos.push({
+        id: crypto.randomUUID(),
+        text,
+        completed: false,
+        important: false,
+        date: datePicker.value
+      });
+
+      input.value = "";
+      saveTodos();
+      render();
+    }
+
+    addBtn.onclick = addTodo;
+    input.addEventListener("keydown", e => e.key === "Enter" && addTodo());
+    clearCompletedBtn.onclick = () => {
+      todos = todos.filter(t => !(t.date === datePicker.value && t.completed));
+      saveTodos();
+      render();
+    };
+
+    datePicker.onchange = render;
+
+    loadTodos();
+    render();
+
+    // PWA service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js");
+      });
+    }
+  </script>
+</body>
 </html>
