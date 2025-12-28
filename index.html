@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>오늘의 할 일</title>
-
+  <title>To‑Do List</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#7bcfa3" />
-
   <style>
     * { box-sizing: border-box; }
 
@@ -69,6 +67,10 @@
       outline: none;
     }
 
+    input[type="text"]:focus {
+      border-color: #7bcfa3;
+    }
+
     button {
       padding: 12px 16px;
       border: none;
@@ -77,6 +79,10 @@
       color: #ffffff;
       font-size: 15px;
       cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.97);
     }
 
     .clear-completed {
@@ -89,6 +95,10 @@
       color: #3f7f5f;
       font-size: 14px;
       cursor: pointer;
+    }
+
+    .clear-completed:active {
+      transform: scale(0.98);
     }
 
     ul {
@@ -111,6 +121,7 @@
       align-items: center;
       gap: 10px;
       flex: 1;
+      min-width: 0;
     }
 
     .task span {
@@ -123,17 +134,10 @@
       color: #aaa;
     }
 
-    .important span {
-      font-weight: 600;
-      color: #c89b00;
-    }
-
-    .star-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      color: #f2c94c;
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
     }
 
     .delete-btn {
@@ -142,13 +146,32 @@
       color: #ff5b5b;
       font-size: 18px;
       cursor: pointer;
+      padding: 8px 10px;
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #f2c94c; /* 노랑 별 */
+      padding: 8px 10px;
+    }
+
+    .important span {
+      font-weight: 600;
+      color: #c89b00; /* 강조 노랑 */
     }
 
     .edit-input {
       flex: 1;
+      min-width: 0;
+      font-size: 16px;
       padding: 8px 10px;
       border-radius: 10px;
       border: 1px solid #cfe6d8;
+      outline: none;
+      background: #fff;
     }
 
     .hint {
@@ -159,171 +182,302 @@
     }
   </style>
 </head>
-
 <body>
   <div class="app">
     <h1>📝 오늘의 할 일</h1>
     <div class="counter" id="counter">남은 할 일: 0개</div>
 
+    <!-- 날짜별 관리: 선택한 날짜의 항목만 보여줍니다 -->
     <input type="date" id="datePicker" class="date-picker" />
 
     <div class="input-row">
       <input id="todoInput" type="text" placeholder="할 일을 입력하세요" />
-      <button id="addBtn">추가</button>
+      <button id="addBtn" type="button">추가</button>
     </div>
 
-    <button class="clear-completed" id="clearCompletedBtn">완료된 항목 모두 삭제</button>
+    <button class="clear-completed" id="clearCompletedBtn" type="button">완료된 항목 모두 삭제</button>
 
     <ul id="todoList"></ul>
 
-    <div class="hint">팁: 할 일을 더블 클릭하면 수정할 수 있어요</div>
+    <button id="installBtn" style="display:none;margin:12px auto 6px;display:block;padding:12px 18px;border-radius:999px;border:none;background:#7bcfa3;color:#fff;font-size:15px;cursor:pointer;">📲 앱 설치하기</button>
+
+    <div class="hint">팁: 할 일 텍스트를 더블클릭하면 수정할 수 있어요.</div>
   </div>
 
+  <!-- 스크립트는 body 끝에 두어 DOM이 먼저 로드되도록 합니다 -->
   <script>
-    const STORAGE_KEY = "todos_v1";
+    // ===== PWA 설치 버튼 처리 =====
+    let deferredPrompt = null;
 
-    const input = document.getElementById("todoInput");
-    const list = document.getElementById("todoList");
-    const counter = document.getElementById("counter");
-    const datePicker = document.getElementById("datePicker");
-    const addBtn = document.getElementById("addBtn");
-    const clearCompletedBtn = document.getElementById("clearCompletedBtn");
+    const installBtn = document.getElementById('installBtn');
 
-    const today = new Date().toISOString().split("T")[0];
-    datePicker.value = today;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+    });
 
-    let todos = [];
+    installBtn?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
 
-    function saveTodos() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-    }
 
-    function loadTodos() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
+    (function () {
+      'use strict';
+
+      // ====== 상수/키 ======
+      const STORAGE_KEY = 'todos_v1';
+
+      // ====== DOM 참조 ======
+      const input = document.getElementById('todoInput');
+      const counter = document.getElementById('counter');
+      const list = document.getElementById('todoList');
+      const datePicker = document.getElementById('datePicker');
+      const addBtn = document.getElementById('addBtn');
+      const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+
+      // DOM이 없으면(구조가 바뀌었거나 스크립트 위치가 잘못된 경우) 빠르게 알려줌
+      if (!input || !counter || !list || !datePicker || !addBtn || !clearCompletedBtn) {
+        throw new Error('필수 DOM 요소를 찾지 못했습니다. HTML에 #datePicker, #todoInput, #todoList 등이 존재하는지 확인하세요.');
+      }
+
+      // 오늘 날짜 기본값
+      const today = new Date().toISOString().split('T')[0];
+      datePicker.value = today;
+
+      // ====== 데이터 구조 ======
+      // todos = [{ id, text, completed, important, date }]
+      let todos = [];
+
+      // ====== 저장/로드 ======
+      function saveTodos() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      }
+
+      function loadTodos() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
         try {
-          todos = JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            // 방어적으로 필드 보정
+            todos = parsed
+              .filter(t => t && typeof t.text === 'string')
+              .map(t => ({
+                id: typeof t.id === 'string' ? t.id : cryptoRandomId(),
+                text: t.text,
+                completed: !!t.completed,
+                important: !!t.important,
+                date: typeof t.date === 'string' ? t.date : today
+              }));
+          }
         } catch {
+          // 깨진 저장값이면 무시
           todos = [];
         }
       }
-    }
 
-    function getVisibleTodos() {
-      return todos.filter(t => t.date === datePicker.value);
-    }
+      // ====== 유틸 ======
+      function cryptoRandomId() {
+        // crypto.randomUUID가 있으면 사용, 없으면 대체
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+        return 'id_' + Math.random().toString(16).slice(2) + '_' + Date.now();
+      }
 
-    function updateCounter() {
-      const count = getVisibleTodos().filter(t => !t.completed).length;
-      counter.textContent = `남은 할 일: ${count}개`;
-    }
+      function getSelectedDate() {
+        return datePicker.value || today;
+      }
 
-    function render() {
-      list.innerHTML = "";
-      getVisibleTodos().forEach(t => {
-        const li = document.createElement("li");
-        if (t.completed) li.classList.add("completed");
-        if (t.important) li.classList.add("important");
+      function getVisibleTodos() {
+        const selected = getSelectedDate();
+        return todos.filter(t => t.date === selected);
+      }
 
-        const task = document.createElement("div");
-        task.className = "task";
+      function updateCounter() {
+        const remaining = getVisibleTodos().filter(t => !t.completed).length;
+        counter.textContent = `남은 할 일: ${remaining}개`;
+      }
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = t.completed;
-        checkbox.onchange = () => {
-          t.completed = checkbox.checked;
-          saveTodos();
-          render();
+      // ====== 렌더 ======
+      function render() {
+        const visible = getVisibleTodos();
+
+        // 목록 비우기
+        list.innerHTML = '';
+
+        // 보이는 항목 렌더
+        visible.forEach(t => {
+          const li = document.createElement('li');
+          li.dataset.id = t.id;
+          if (t.completed) li.classList.add('completed');
+          if (t.important) li.classList.add('important');
+
+          const taskDiv = document.createElement('div');
+          taskDiv.className = 'task';
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = t.completed;
+
+          const span = document.createElement('span');
+          span.textContent = t.text;
+
+          // ✏️ 수정 (더블클릭)
+          span.addEventListener('dblclick', () => {
+            enterEditMode(li, taskDiv, span, t.id);
+          });
+
+          checkbox.addEventListener('change', () => {
+            toggleCompleted(t.id, checkbox.checked);
+          });
+
+          taskDiv.appendChild(checkbox);
+          taskDiv.appendChild(span);
+
+          const starBtn = document.createElement('button');
+          starBtn.className = 'star-btn';
+          starBtn.type = 'button';
+          starBtn.textContent = t.important ? '★' : '☆';
+          starBtn.onclick = () => toggleImportant(t.id);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.type = 'button';
+          deleteBtn.textContent = '✕';
+          deleteBtn.onclick = () => deleteTodo(t.id);
+
+          li.appendChild(taskDiv);
+          li.appendChild(starBtn);
+          li.appendChild(deleteBtn);
+
+          list.appendChild(li);
+        });
+
+        updateCounter();
+      }
+
+      // ====== 동작 함수 ======
+      function addTodo() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        const selectedDate = getSelectedDate();
+        const newTodo = {
+          id: cryptoRandomId(),
+          text,
+          completed: false,
+          important: false,
+          date: selectedDate
         };
 
-        const span = document.createElement("span");
-        span.textContent = t.text;
-
-        span.ondblclick = () => editTodo(t, span);
-
-        task.appendChild(checkbox);
-        task.appendChild(span);
-
-        const star = document.createElement("button");
-        star.className = "star-btn";
-        star.textContent = t.important ? "★" : "☆";
-        star.onclick = () => {
-          t.important = !t.important;
-          saveTodos();
-          render();
-        };
-
-        const del = document.createElement("button");
-        del.className = "delete-btn";
-        del.textContent = "✕";
-        del.onclick = () => {
-          todos = todos.filter(x => x !== t);
-          saveTodos();
-          render();
-        };
-
-        li.append(task, star, del);
-        list.appendChild(li);
-      });
-
-      updateCounter();
-    }
-
-    function editTodo(todo, span) {
-      const input = document.createElement("input");
-      input.className = "edit-input";
-      input.value = todo.text;
-
-      span.replaceWith(input);
-      input.focus();
-
-      input.onblur = () => {
-        todo.text = input.value.trim() || todo.text;
+        todos.push(newTodo);
+        input.value = '';
         saveTodos();
         render();
-      };
+      }
 
-      input.onkeydown = e => {
-        if (e.key === "Enter") input.blur();
-        if (e.key === "Escape") render();
-      };
-    }
+      function deleteTodo(id) {
+        todos = todos.filter(t => t.id !== id);
+        saveTodos();
+        render();
+      }
 
-    function addTodo() {
-      const text = input.value.trim();
-      if (!text) return;
+      function toggleCompleted(id, checked) {
+        const t = todos.find(x => x.id === id);
+        if (!t) return;
+        t.completed = !!checked;
+        saveTodos();
+        render();
+      }
 
-      todos.push({
-        id: crypto.randomUUID(),
-        text,
-        completed: false,
-        important: false,
-        date: datePicker.value
+      function toggleImportant(id) {
+        const t = todos.find(x => x.id === id);
+        if (!t) return;
+        t.important = !t.important;
+        saveTodos();
+        render();
+      }
+
+      function clearCompleted() {
+        const selected = getSelectedDate();
+        // 선택한 날짜의 완료 항목만 삭제 (가정)
+        todos = todos.filter(t => !(t.date === selected && t.completed));
+        saveTodos();
+        render();
+      }
+
+      function enterEditMode(li, taskDiv, span, id) {
+        // 이미 수정 모드면 중복 진입 방지
+        const existing = taskDiv.querySelector('input.edit-input');
+        if (existing) return;
+
+        const edit = document.createElement('input');
+        edit.className = 'edit-input';
+        edit.type = 'text';
+        edit.value = span.textContent;
+
+        taskDiv.replaceChild(edit, span);
+        edit.focus();
+        edit.setSelectionRange(edit.value.length, edit.value.length);
+
+        const commit = () => {
+          const next = edit.value.trim();
+          const t = todos.find(x => x.id === id);
+          if (t && next) t.text = next;
+          // 빈 값이면 변경하지 않음
+          saveTodos();
+          render();
+        };
+
+        const cancel = () => {
+          render();
+        };
+
+        edit.addEventListener('blur', commit);
+        edit.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            cancel();
+          }
+        });
+      }
+
+      // ====== 이벤트 바인딩 ======
+      addBtn.addEventListener('click', addTodo);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addTodo();
       });
+      clearCompletedBtn.addEventListener('click', clearCompleted);
+      datePicker.addEventListener('change', render);
 
-      input.value = "";
-      saveTodos();
+      // ====== 간단 테스트(콘솔) ======
+      // 개발 중 빠르게 확인하기 위한 최소 검증
+      function runSelfTests() {
+        // datePicker 값이 있어야 함
+        console.assert(!!getSelectedDate(), 'TEST: selected date should exist');
+        // todos는 배열이어야 함
+        console.assert(Array.isArray(todos), 'TEST: todos should be an array');
+      }
+
+      // ====== 초기화 ======
+      loadTodos();
+      runSelfTests();
       render();
-    }
-
-    addBtn.onclick = addTodo;
-    input.addEventListener("keydown", e => e.key === "Enter" && addTodo());
-    clearCompletedBtn.onclick = () => {
-      todos = todos.filter(t => !(t.date === datePicker.value && t.completed));
-      saveTodos();
-      render();
-    };
-
-    datePicker.onchange = render;
-
-    loadTodos();
-    render();
-
-    // PWA service worker
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js");
+    })();
+  </script>
+  <script>
+    // PWA 서비스 워커 등록
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
       });
     }
   </script>
