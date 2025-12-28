@@ -1,12 +1,12 @@
 {
   "name": "오늘의 할 일",
   "short_name": "To-Do",
-  "description": "날짜별로 관리하는 심플한 할 일 앱",
-  "start_url": "./index.html",
+  "description": "간단하고 예쁜 할 일 관리 앱",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#eaf5ef",
   "theme_color": "#7bcfa3",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
