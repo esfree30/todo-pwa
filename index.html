@@ -319,7 +319,7 @@ document.getElementById('nextMonth').onclick = () => {
 };
 
 // add todo
-document.getElementById('addBtn').onclick = () => {
+function addTodo() {
   const text = input.value.trim();
   if (!text) return;
 
@@ -336,7 +336,18 @@ document.getElementById('addBtn').onclick = () => {
   timeInput.value = '';
   saveTodos();
   render();
-};
+}
+
+// 버튼 클릭
+addBtn.onclick = addTodo;
+
+// ✅ 엔터로 추가
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addTodo();
+  }
+});
 
 // delete completed
 document.getElementById('clearCompletedBtn').onclick = () => {
