@@ -463,6 +463,8 @@ function render() {
 
 /* ================= 이벤트 ================= */
 document.getElementById('openCalendarBtn').onclick = () => {
+  // ⭐ 선택된 날짜 기준으로 월 동기화
+  calendarMonth = new Date(selectedDate);
   calendarOverlay.style.display = 'flex';
   renderMonthCalendar();
 };
