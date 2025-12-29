@@ -74,7 +74,6 @@
 
     .hint { text-align:center; font-size:12px; color:#6a8a7a; margin-top:10px; }
 
-    /* calendar */
     .calendar-overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; justify-content:center; align-items:center; z-index:999; }
     .calendar-modal { background:#fff; border-radius:18px; padding:16px; width:95%; max-width:360px; }
     .calendar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
@@ -119,18 +118,12 @@
 </div>
 
 <script>
-// ✅ 날짜를 UTC(toISOString)로 바꾸면 한국 시간에서 하루가 밀릴 수 있어요.
-//    그래서 로컬 기준(현재 기기 시간대)으로 YYYY-MM-DD를 만들고/파싱합니다.
+/* ================= 기본 유틸 ================= */
 function pad2(n){ return String(n).padStart(2,'0'); }
-function formatDateLocal(d){
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
-function parseDateLocal(ymd){
-  const [y,m,dd] = ymd.split('-').map(Number);
-  return new Date(y, (m||1)-1, dd||1);
-}
+function formatDateLocal(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
 
 const STORAGE_KEY = 'todos_v2';
+
 let todos = [];
 let selectedDate = formatDateLocal(new Date());
 let calendarMonth = new Date();
@@ -140,103 +133,86 @@ const list = document.getElementById('todoList');
 const counter = document.getElementById('counter');
 const input = document.getElementById('todoInput');
 const timeInput = document.getElementById('timeInput');
+const addBtn = document.getElementById('addBtn');
 
 const calendarOverlay = document.getElementById('calendarOverlay');
 const calendarGrid = document.getElementById('calendarGrid');
 const calendarTitle = document.getElementById('calendarTitle');
 
-/* ===== Notification permission ===== */
-if ('Notification' in window && Notification.permission !== 'granted') {
-  Notification.requestPermission();
-}
-
-function notify(title, body) {
-  if (Notification.permission === 'granted') {
-    new Notification(title, { body });
-  }
-}
-
-function saveTodos() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-}
-
-function loadTodos() {
+/* ===== 저장 ===== */
+function saveTodos(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); }
+function loadTodos(){
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) try { todos = JSON.parse(saved); } catch {}
+  if(saved) try { todos = JSON.parse(saved); } catch { todos = []; }
 }
 
-function formatDate(d){
-  // 기존 코드 호환용 래퍼(로컬 기준)
-  return formatDateLocal(d);
-}
-
-/* ===== Date strip ===== */
-function renderDateStrip() {
+/* ===== 날짜 스트립 ===== */
+function renderDateStrip(){
   dateStrip.innerHTML = '';
-  for (let i = -3; i <= 3; i++) {
-    const d = parseDateLocal(selectedDate);
-    d.setDate(d.getDate() + i);
-    const value = formatDate(d);
+  for(let i=-3;i<=3;i++){
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate()+i);
+    const value = formatDateLocal(d);
 
-    const dayTodos = todos.filter(t => t.date === value);
-    const hasTodos = dayTodos.length > 0;
-    const allDone = hasTodos && dayTodos.every(t => t.completed);
+    const dayTodos = todos.filter(t=>t.date===value);
+    const hasTodos = dayTodos.length>0;
+    const allDone = hasTodos && dayTodos.every(t=>t.completed);
 
     const item = document.createElement('div');
-    item.className = 'date-item' + (value === selectedDate ? ' active' : '') + (value === formatDate(new Date()) ? ' today' : '');
+    item.className = 'date-item' + (value===selectedDate?' active':'') + (value===formatDateLocal(new Date())?' today':'');
 
     const day = document.createElement('div');
     day.textContent = ['일','월','화','수','목','금','토'][d.getDay()];
+
     const num = document.createElement('div');
-    num.className = 'num';
-    num.textContent = d.getDate();
+    num.className='num';
+    num.textContent=d.getDate();
 
-    item.append(day, num);
+    item.append(day,num);
 
-    if (hasTodos) {
-      const dot = document.createElement('div');
-      dot.className = 'dot' + (allDone ? ' done' : '');
+    if(hasTodos){
+      const dot=document.createElement('div');
+      dot.className='dot'+(allDone?' done':'');
       item.appendChild(dot);
     }
 
-    item.onclick = () => { selectedDate = value; renderDateStrip(); render(); };
+    item.onclick=()=>{ selectedDate=value; renderDateStrip(); render(); };
     dateStrip.appendChild(item);
   }
 }
 
-/* ===== Month calendar ===== */
-function renderMonthCalendar() {
-  calendarGrid.innerHTML = '';
-  const y = calendarMonth.getFullYear();
-  const m = calendarMonth.getMonth();
-  calendarTitle.textContent = `${y}년 ${m + 1}월`;
+/* ===== 월 달력 ===== */
+function renderMonthCalendar(){
+  calendarGrid.innerHTML='';
+  const y=calendarMonth.getFullYear();
+  const m=calendarMonth.getMonth();
+  calendarTitle.textContent=`${y}년 ${m+1}월`;
 
-  const first = new Date(y, m, 1).getDay();
-  const last = new Date(y, m + 1, 0).getDate();
+  const first=new Date(y,m,1).getDay();
+  const last=new Date(y,m+1,0).getDate();
 
-  for (let i = 0; i < first; i++) calendarGrid.appendChild(document.createElement('div'));
+  for(let i=0;i<first;i++) calendarGrid.appendChild(document.createElement('div'));
 
-  for (let d = 1; d <= last; d++) {
-    const cell = document.createElement('div');
-    const dateObj = new Date(y, m, d);
-    const dateStr = formatDate(dateObj);
+  for(let d=1; d<=last; d++){
+    const cell=document.createElement('div');
+    const dateStr=formatDateLocal(new Date(y,m,d));
 
-    cell.className = 'calendar-cell';
-    cell.textContent = d;
+    cell.className='calendar-cell';
+    cell.textContent=d;
 
-    if (dateStr === formatDate(new Date())) cell.classList.add('today');
-    if (dateStr === selectedDate) cell.classList.add('selected');
+    if(dateStr===formatDateLocal(new Date())) cell.classList.add('today');
+    if(dateStr===selectedDate) cell.classList.add('selected');
 
-    const dayTodos = todos.filter(t => t.date === dateStr);
-    if (dayTodos.length) {
-      const dot = document.createElement('div');
-      dot.className = 'dot' + (dayTodos.every(t => t.completed) ? ' done' : '');
+    const dayTodos=todos.filter(t=>t.date===dateStr);
+    if(dayTodos.length){
+      const dot=document.createElement('div');
+      dot.className='dot'+(dayTodos.every(t=>t.completed)?' done':'');
       cell.appendChild(dot);
     }
 
-    cell.onclick = () => {
-      selectedDate = dateStr;
-      calendarOverlay.style.display = 'none';
+    cell.onclick=()=>{
+      selectedDate=dateStr;
+      calendarOverlay.style.display='none';
       renderDateStrip();
       render();
     };
@@ -246,117 +222,94 @@ function renderMonthCalendar() {
 }
 
 /* ===== 렌더 ===== */
-function render() {
-  list.innerHTML = '';
+function render(){
+  list.innerHTML='';
+  const visible=todos.filter(t=>t.date===selectedDate);
 
-  const visible = todos.filter(t => t.date === selectedDate);
+  visible.forEach(t=>{
+    const li=document.createElement('li');
+    if(t.completed) li.classList.add('completed');
 
-  visible.forEach(t => {
-    const li = document.createElement('li');
-    if (t.completed) li.classList.add('completed');
+    const task=document.createElement('div');
+    task.className='task';
 
-    const task = document.createElement('div');
-    task.className = 'task';
+    const checkbox=document.createElement('input');
+    checkbox.type='checkbox';
+    checkbox.checked=t.completed;
+    checkbox.onchange=()=>{ t.completed=checkbox.checked; saveTodos(); render(); };
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = t.completed;
-    checkbox.onchange = () => {
-      t.completed = checkbox.checked;
-      saveTodos();
-      render();
-    };
+    const span=document.createElement('span');
+    span.textContent=t.text;
 
-    const span = document.createElement('span');
-    span.textContent = t.text;
+    task.append(checkbox,span);
 
-    task.append(checkbox, span);
+    const star=document.createElement('button');
+    star.className='star-btn';
+    star.textContent=t.important?'★':'☆';
+    star.onclick=()=>{ t.important=!t.important; saveTodos(); render(); };
 
-    const star = document.createElement('button');
-    star.className = 'star-btn';
-    star.textContent = t.important ? '★' : '☆';
-    star.onclick = () => {
-      t.important = !t.important;
-      saveTodos();
-      render();
-    };
+    const del=document.createElement('button');
+    del.className='delete-btn';
+    del.textContent='✕';
+    del.onclick=()=>{ todos=todos.filter(x=>x!==t); saveTodos(); render(); };
 
-    const del = document.createElement('button');
-    del.className = 'delete-btn';
-    del.textContent = '✕';
-    del.onclick = () => {
-      todos = todos.filter(x => x !== t);
-      saveTodos();
-      render();
-    };
-
-    li.append(task, star, del);
+    li.append(task,star,del);
     list.appendChild(li);
   });
 
-  counter.textContent = `남은 할 일: ${visible.filter(t => !t.completed).length}개`;
+  counter.textContent=`남은 할 일: ${visible.filter(t=>!t.completed).length}개`;
 }
 
 /* ===== 이벤트 ===== */
-document.getElementById('openCalendarBtn').onclick = () => {
-  calendarMonth = new Date(selectedDate);
-  calendarOverlay.style.display = 'flex';
-  renderMonthCalendar();
+addBtn.onclick=addTodo;
+input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addTodo(); }});
+
+document.getElementById('clearCompletedBtn').onclick=()=>{
+  todos=todos.filter(t=>!(t.date===selectedDate && t.completed));
+  saveTodos(); render();
 };
 
-calendarOverlay.addEventListener('click', e => {
-  if (e.target === calendarOverlay) calendarOverlay.style.display = 'none';
-});
-
-document.getElementById('prevMonth').onclick = () => {
-  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
-  renderMonthCalendar();
-};
-
-document.getElementById('nextMonth').onclick = () => {
-  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
-  renderMonthCalendar();
-};
-
-// add todo
-function addTodo() {
-  const text = input.value.trim();
-  if (!text) return;
+function addTodo(){
+  const text=input.value.trim();
+  if(!text) return;
 
   todos.push({
     id: crypto.randomUUID(),
     text,
-    completed: false,
-    important: false,
-    date: selectedDate,
+    completed:false,
+    important:false,
+    date:selectedDate,
     time: timeInput.value || null
   });
 
-  input.value = '';
-  timeInput.value = '';
+  input.value='';
+  timeInput.value='';
   saveTodos();
   render();
 }
 
-// 버튼 클릭
-addBtn.onclick = addTodo;
-
-// ✅ 엔터로 추가
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addTodo();
-  }
-});
-
-// delete completed
-document.getElementById('clearCompletedBtn').onclick = () => {
-  todos = todos.filter(t => !(t.date === selectedDate && t.completed));
-  saveTodos();
-  render();
+/* 달력 열기 */
+document.getElementById('openCalendarBtn').onclick=()=>{
+  calendarMonth=new Date(selectedDate);
+  calendarOverlay.style.display='flex';
+  renderMonthCalendar();
 };
 
-/* ===== 초기화 ===== */
+calendarOverlay.addEventListener('click',e=>{
+  if(e.target===calendarOverlay) calendarOverlay.style.display='none';
+});
+
+document.getElementById('prevMonth').onclick=()=>{
+  calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);
+  renderMonthCalendar();
+};
+
+document.getElementById('nextMonth').onclick=()=>{
+  calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1);
+  renderMonthCalendar();
+};
+
+/* 초기 실행 */
 loadTodos();
 renderDateStrip();
 render();
@@ -368,31 +321,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
   });
 }
-if ("Notification" in window && Notification.permission === "default") {
-  Notification.requestPermission();
-}
-function startNotificationWatcher() {
-  if (!navigator.serviceWorker.controller) return;
-
-  setInterval(() => {
-    navigator.serviceWorker.controller.postMessage({
-      type: "CHECK_TODOS",
-      todos: JSON.parse(localStorage.getItem("todos_v1") || "[]")
-    });
-  }, 30000); // 30초마다 체크
-}
-
-navigator.serviceWorker.ready.then(() => {
-  startNotificationWatcher();
-});
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data?.type === "UPDATED_TODOS") {
-    localStorage.setItem("todos_v1", JSON.stringify(event.data.todos));
-  }
-});
-
 </script>
 
 </body>
 </html>
-
