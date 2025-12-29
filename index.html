@@ -188,7 +188,10 @@
     <div class="counter" id="counter">남은 할 일: 0개</div>
 
     <!-- 날짜별 관리: 선택한 날짜의 항목만 보여줍니다 -->
-    <input type="date" id="datePicker" class="date-picker" />
+    <div id="dateStrip" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;"></div>
+
+<input type="date" id="datePicker" class="date-picker" style="display:none;" />
+
 
     <div class="input-row">
       <input id="todoInput" type="text" placeholder="할 일을 입력하세요" />
@@ -247,6 +250,42 @@
 
       // 오늘 날짜 기본값
       const today = new Date().toISOString().split('T')[0];
+      function formatDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function renderDateStrip() {
+  const container = document.getElementById("dateStrip");
+  container.innerHTML = "";
+
+  const base = new Date();
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    const iso = d.toISOString().split("T")[0];
+
+    const btn = document.createElement("button");
+    btn.textContent = formatDateLabel(iso);
+
+    btn.style.padding = "10px 14px";
+    btn.style.borderRadius = "999px";
+    btn.style.border = "1px solid #cfe6d8";
+    btn.style.cursor = "pointer";
+    btn.style.background = iso === datePicker.value ? "#7bcfa3" : "#fff";
+    btn.style.color = iso === datePicker.value ? "#fff" : "#2f7d5b";
+
+    btn.onclick = () => {
+      datePicker.value = iso;
+      render();
+      renderDateStrip();
+    };
+
+    container.appendChild(btn);
+  }
+}
+
       datePicker.value = today;
 
       // ====== 데이터 구조 ======
@@ -483,3 +522,4 @@
   </script>
 </body>
 </html>
+
