@@ -119,9 +119,20 @@
 </div>
 
 <script>
+// ✅ 날짜를 UTC(toISOString)로 바꾸면 한국 시간에서 하루가 밀릴 수 있어요.
+//    그래서 로컬 기준(현재 기기 시간대)으로 YYYY-MM-DD를 만들고/파싱합니다.
+function pad2(n){ return String(n).padStart(2,'0'); }
+function formatDateLocal(d){
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function parseDateLocal(ymd){
+  const [y,m,dd] = ymd.split('-').map(Number);
+  return new Date(y, (m||1)-1, dd||1);
+}
+
 const STORAGE_KEY = 'todos_v2';
 let todos = [];
-let selectedDate = new Date().toISOString().split('T')[0];
+let selectedDate = formatDateLocal(new Date());
 let calendarMonth = new Date();
 
 const dateStrip = document.getElementById('dateStrip');
@@ -154,15 +165,16 @@ function loadTodos() {
   if (saved) try { todos = JSON.parse(saved); } catch {}
 }
 
-function formatDate(d) {
-  return d.toISOString().split('T')[0];
+function formatDate(d){
+  // 기존 코드 호환용 래퍼(로컬 기준)
+  return formatDateLocal(d);
 }
 
 /* ===== Date strip ===== */
 function renderDateStrip() {
   dateStrip.innerHTML = '';
   for (let i = -3; i <= 3; i++) {
-    const d = new Date(selectedDate);
+    const d = parseDateLocal(selectedDate);
     d.setDate(d.getDate() + i);
     const value = formatDate(d);
 
