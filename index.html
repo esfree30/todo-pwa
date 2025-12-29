@@ -247,9 +247,9 @@
 <div class="calendar-overlay" id="calendarOverlay">
   <div class="calendar-modal">
     <div class="calendar-header">
-      <button id="prevMonth">◀</button>
+      <button id="prevMonth" onclick="prevMonth()">◀</button>
       <div class="calendar-title" id="calendarTitle"></div>
-      <button id="nextMonth">▶</button>
+      <button id="nextMonth" onclick="nextMonth()">▶</button>
     </div>
 
     <div class="calendar-grid" id="calendarGrid"></div>
@@ -352,6 +352,12 @@ function renderDateStrip() {
 
 /* ================= 월 달력 ================= */
 function renderMonthCalendar() {
+  calendarGrid.innerHTML = '';
+
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+
+  calendarTitle.textContent = `${year}년 ${month + 1}월`;
   calendarGrid.innerHTML = '';
 
   const year = calendarMonth.getFullYear();
@@ -471,6 +477,16 @@ document.getElementById('openCalendarBtn').onclick = () => {
 calendarOverlay.addEventListener('click', e => {
   if (e.target === calendarOverlay) calendarOverlay.style.display = 'none';
 });
+
+function prevMonth() {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+  renderMonthCalendar();
+}
+
+function nextMonth() {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+  renderMonthCalendar();
+}
 
 // 월 이동
 document.getElementById('prevMonth').onclick = () => {
