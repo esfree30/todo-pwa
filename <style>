@@ -188,9 +188,71 @@
       color: #6a8a7a;
       margin-top: 10px;
     }
+ .calendar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.calendar-modal {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.calendar-modal input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #cfe6d8;
+  font-size: 16px;
+}
+
+.calendar-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.calendar-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.calendar-ok {
+  background: #7bcfa3;
+  color: white;
+}
+
+.calendar-cancel {
+  background: #eee;
+  color: #555;
+}
+
   </style>
 </head>
 <body>
+<div class="calendar-overlay" id="calendarOverlay">
+  <div class="calendar-modal">
+    <h3>날짜 선택</h3>
+    <input type="date" id="fullCalendarInput" />
+    <div class="calendar-actions">
+      <button class="calendar-cancel" id="calendarCancel">취소</button>
+      <button class="calendar-ok" id="calendarConfirm">선택</button>
+    </div>
+  </div>
+</div>
 
 <div class="app">
   <h1>📝 오늘의 할 일</h1>
@@ -388,6 +450,30 @@ document.getElementById("clearCompletedBtn").onclick = () => {
 loadTodos();
 renderDateStrip();
 render();
+  const openCalendarBtn = document.getElementById("openCalendarBtn");
+const calendarOverlay = document.getElementById("calendarOverlay");
+const fullCalendarInput = document.getElementById("fullCalendarInput");
+const calendarCancel = document.getElementById("calendarCancel");
+const calendarConfirm = document.getElementById("calendarConfirm");
+
+openCalendarBtn.addEventListener("click", () => {
+  fullCalendarInput.value = selectedDate;
+  calendarOverlay.style.display = "flex";
+});
+
+calendarCancel.addEventListener("click", () => {
+  calendarOverlay.style.display = "none";
+});
+
+calendarConfirm.addEventListener("click", () => {
+  if (fullCalendarInput.value) {
+    selectedDate = fullCalendarInput.value;
+    renderDateStrip();
+    render();
+  }
+  calendarOverlay.style.display = "none";
+});
+
 </script>
 
 <script>
@@ -400,3 +486,4 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
+
