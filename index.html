@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>오늘의 할 일</title>
-
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#7bcfa3" />
 
@@ -32,7 +31,7 @@
     h1 {
       text-align: center;
       font-size: 22px;
-      margin: 0 0 10px;
+      margin-bottom: 8px;
     }
 
     .counter {
@@ -42,13 +41,13 @@
       margin-bottom: 10px;
     }
 
-    /* ===== 날짜 스트립 ===== */
+    /* ===== 상단 7일 바 ===== */
     .date-strip {
       display: flex;
       gap: 8px;
       overflow-x: auto;
       padding: 6px 2px 12px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .date-item {
@@ -75,15 +74,8 @@
       box-shadow: 0 0 0 2px rgba(123,207,163,0.25);
     }
 
-    .date-item .day {
-      font-size: 11px;
-      opacity: 0.8;
-    }
-
-    .date-item .num {
-      font-size: 16px;
-      font-weight: 600;
-    }
+    .date-item .day { font-size: 11px; opacity: .8; }
+    .date-item .num { font-size: 16px; font-weight: 600; }
 
     .date-item .dot {
       width: 6px;
@@ -93,9 +85,7 @@
       background: #4caf8f;
     }
 
-    .date-item .dot.done {
-      background: #9fb7ad;
-    }
+    .date-item .dot.done { background: #9fb7ad; }
 
     #openCalendarBtn {
       display: block;
@@ -140,11 +130,7 @@
       color: #3f7f5f;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+    ul { list-style: none; padding: 0; margin: 0; }
 
     li {
       display: flex;
@@ -161,10 +147,7 @@
       flex: 1;
     }
 
-    .completed span {
-      text-decoration: line-through;
-      color: #aaa;
-    }
+    .completed span { text-decoration: line-through; color: #aaa; }
 
     .star-btn {
       background: none;
@@ -188,69 +171,88 @@
       color: #6a8a7a;
       margin-top: 10px;
     }
- .calendar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
 
-.calendar-modal {
-  background: white;
-  border-radius: 18px;
-  padding: 20px;
-  width: 90%;
-  max-width: 320px;
-  text-align: center;
-}
+    /* ===== 월 달력 팝업 ===== */
+    .calendar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
 
-.calendar-modal input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #cfe6d8;
-  font-size: 16px;
-}
+    .calendar-modal {
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      width: 95%;
+      max-width: 360px;
+    }
 
-.calendar-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-}
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
-.calendar-actions button {
-  flex: 1;
-  padding: 12px;
-  border-radius: 999px;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-}
+    .calendar-header button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
 
-.calendar-ok {
-  background: #7bcfa3;
-  color: white;
-}
+    .calendar-title { font-weight: 600; }
 
-.calendar-cancel {
-  background: #eee;
-  color: #555;
-}
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .calendar-cell {
+      padding: 8px 0;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .calendar-cell.today {
+      border: 2px solid #4caf8f;
+    }
+
+    .calendar-cell.selected {
+      background: #7bcfa3;
+      color: #fff;
+    }
+
+    .calendar-cell .dot {
+      width: 6px;
+      height: 6px;
+      margin: 4px auto 0;
+      border-radius: 50%;
+      background: #4caf8f;
+    }
+
+    .calendar-cell .dot.done { background: #9fb7ad; }
 
   </style>
 </head>
 <body>
+
 <div class="calendar-overlay" id="calendarOverlay">
   <div class="calendar-modal">
-    <h3>날짜 선택</h3>
-    <input type="date" id="fullCalendarInput" />
-    <div class="calendar-actions">
-      <button class="calendar-cancel" id="calendarCancel">취소</button>
-      <button class="calendar-ok" id="calendarConfirm">선택</button>
+    <div class="calendar-header">
+      <button id="prevMonth">◀</button>
+      <div class="calendar-title" id="calendarTitle"></div>
+      <button id="nextMonth">▶</button>
     </div>
+
+    <div class="calendar-grid" id="calendarGrid"></div>
   </div>
 </div>
 
@@ -269,47 +271,47 @@
   <button class="clear-completed" id="clearCompletedBtn">완료된 항목 모두 삭제</button>
 
   <ul id="todoList"></ul>
-
-  <div class="hint">날짜를 눌러 이동 · 더블클릭으로 수정</div>
+  <div class="hint">날짜 클릭 → 해당 날짜 일정 · 더블클릭으로 수정</div>
 </div>
 
 <script>
-/* ================= 기본 상태 ================= */
-const STORAGE_KEY = "todos_v1";
+/* ================= 상태 ================= */
+const STORAGE_KEY = 'todos_v1';
 let todos = [];
-let selectedDate = new Date().toISOString().split("T")[0];
+let selectedDate = new Date().toISOString().split('T')[0];
+let calendarMonth = new Date();
 
-const dateStrip = document.getElementById("dateStrip");
-const list = document.getElementById("todoList");
-const counter = document.getElementById("counter");
-const input = document.getElementById("todoInput");
+const dateStrip = document.getElementById('dateStrip');
+const list = document.getElementById('todoList');
+const counter = document.getElementById('counter');
+const input = document.getElementById('todoInput');
 
-/* ================= 유틸 ================= */
-function formatDate(d) {
-  return d.toISOString().split("T")[0];
+const calendarOverlay = document.getElementById('calendarOverlay');
+const calendarGrid = document.getElementById('calendarGrid');
+const calendarTitle = document.getElementById('calendarTitle');
+
+/* ================= 저장 ================= */
+function saveTodos() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
 }
 
 function loadTodos() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
-    try {
-      todos = JSON.parse(saved);
-    } catch {
-      todos = [];
-    }
+    try { todos = JSON.parse(saved); } catch { todos = []; }
   }
 }
 
-function saveTodos() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+function formatDate(d) {
+  return d.toISOString().split('T')[0];
 }
 
-/* ================= 날짜 스트립 ================= */
+/* ================= 상단 7일 바 ================= */
 function renderDateStrip() {
-  dateStrip.innerHTML = "";
+  dateStrip.innerHTML = '';
 
   for (let i = -3; i <= 3; i++) {
-    const d = new Date();
+    const d = new Date(selectedDate);
     d.setDate(d.getDate() + i);
     const value = formatDate(d);
 
@@ -317,26 +319,24 @@ function renderDateStrip() {
     const hasTodos = dayTodos.length > 0;
     const allDone = hasTodos && dayTodos.every(t => t.completed);
 
-    const item = document.createElement("div");
-    item.className =
-      "date-item" +
-      (value === selectedDate ? " active" : "") +
-      (value === formatDate(new Date()) ? " today" : "");
+    const item = document.createElement('div');
+    item.className = 'date-item'
+      + (value === selectedDate ? ' active' : '')
+      + (value === formatDate(new Date()) ? ' today' : '');
 
-    const day = document.createElement("div");
-    day.className = "day";
-    day.textContent = ["일","월","화","수","목","금","토"][d.getDay()];
+    const day = document.createElement('div');
+    day.className = 'day';
+    day.textContent = ['일','월','화','수','목','금','토'][d.getDay()];
 
-    const num = document.createElement("div");
-    num.className = "num";
+    const num = document.createElement('div');
+    num.className = 'num';
     num.textContent = d.getDate();
 
-    item.appendChild(day);
-    item.appendChild(num);
+    item.append(day, num);
 
     if (hasTodos) {
-      const dot = document.createElement("div");
-      dot.className = "dot" + (allDone ? " done" : "");
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (allDone ? ' done' : '');
       item.appendChild(dot);
     }
 
@@ -350,21 +350,67 @@ function renderDateStrip() {
   }
 }
 
+/* ================= 월 달력 ================= */
+function renderMonthCalendar() {
+  calendarGrid.innerHTML = '';
+
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+
+  calendarTitle.textContent = `${year}년 ${month + 1}월`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    calendarGrid.appendChild(document.createElement('div'));
+  }
+
+  for (let d = 1; d <= lastDate; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'calendar-cell';
+
+    const dateObj = new Date(year, month, d);
+    const dateStr = formatDate(dateObj);
+
+    cell.textContent = d;
+
+    if (dateStr === formatDate(new Date())) cell.classList.add('today');
+    if (dateStr === selectedDate) cell.classList.add('selected');
+
+    const dayTodos = todos.filter(t => t.date === dateStr);
+    if (dayTodos.length) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (dayTodos.every(t => t.completed) ? ' done' : '');
+      cell.appendChild(dot);
+    }
+
+    cell.onclick = () => {
+      selectedDate = dateStr;
+      calendarOverlay.style.display = 'none';
+      renderDateStrip();
+      render();
+    };
+
+    calendarGrid.appendChild(cell);
+  }
+}
+
 /* ================= 렌더 ================= */
 function render() {
-  list.innerHTML = "";
+  list.innerHTML = '';
 
   const visible = todos.filter(t => t.date === selectedDate);
 
   visible.forEach(t => {
-    const li = document.createElement("li");
-    if (t.completed) li.classList.add("completed");
+    const li = document.createElement('li');
+    if (t.completed) li.classList.add('completed');
 
-    const task = document.createElement("div");
-    task.className = "task";
+    const task = document.createElement('div');
+    task.className = 'task';
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
     checkbox.checked = t.completed;
     checkbox.onchange = () => {
       t.completed = checkbox.checked;
@@ -372,43 +418,37 @@ function render() {
       render();
     };
 
-    const span = document.createElement("span");
+    const span = document.createElement('span');
     span.textContent = t.text;
 
     span.ondblclick = () => {
-      const input = document.createElement("input");
-      input.className = "edit-input";
-      input.value = t.text;
-      task.replaceChild(input, span);
-      input.focus();
+      const inputEdit = document.createElement('input');
+      inputEdit.value = t.text;
+      inputEdit.className = 'edit-input';
+      task.replaceChild(inputEdit, span);
+      inputEdit.focus();
 
-      input.onblur = () => {
-        t.text = input.value.trim() || t.text;
+      inputEdit.onblur = () => {
+        t.text = inputEdit.value.trim() || t.text;
         saveTodos();
         render();
       };
-
-      input.onkeydown = e => {
-        if (e.key === "Enter") input.blur();
-        if (e.key === "Escape") render();
-      };
     };
 
-    task.appendChild(checkbox);
-    task.appendChild(span);
+    task.append(checkbox, span);
 
-    const star = document.createElement("button");
-    star.className = "star-btn";
-    star.textContent = t.important ? "★" : "☆";
+    const star = document.createElement('button');
+    star.className = 'star-btn';
+    star.textContent = t.important ? '★' : '☆';
     star.onclick = () => {
       t.important = !t.important;
       saveTodos();
       render();
     };
 
-    const del = document.createElement("button");
-    del.className = "delete-btn";
-    del.textContent = "✕";
+    const del = document.createElement('button');
+    del.className = 'delete-btn';
+    del.textContent = '✕';
     del.onclick = () => {
       todos = todos.filter(x => x !== t);
       saveTodos();
@@ -423,7 +463,28 @@ function render() {
 }
 
 /* ================= 이벤트 ================= */
-document.getElementById("addBtn").onclick = () => {
+document.getElementById('openCalendarBtn').onclick = () => {
+  calendarOverlay.style.display = 'flex';
+  renderMonthCalendar();
+};
+
+calendarOverlay.addEventListener('click', e => {
+  if (e.target === calendarOverlay) calendarOverlay.style.display = 'none';
+});
+
+// 월 이동
+document.getElementById('prevMonth').onclick = () => {
+  calendarMonth.setMonth(calendarMonth.getMonth() - 1);
+  renderMonthCalendar();
+};
+
+document.getElementById('nextMonth').onclick = () => {
+  calendarMonth.setMonth(calendarMonth.getMonth() + 1);
+  renderMonthCalendar();
+};
+
+// 추가 버튼
+document.getElementById('addBtn').onclick = () => {
   const text = input.value.trim();
   if (!text) return;
 
@@ -435,56 +496,31 @@ document.getElementById("addBtn").onclick = () => {
     date: selectedDate
   });
 
-  input.value = "";
+  input.value = '';
   saveTodos();
   render();
 };
 
-document.getElementById("clearCompletedBtn").onclick = () => {
+// 완료 삭제
+document.getElementById('clearCompletedBtn').onclick = () => {
   todos = todos.filter(t => !(t.date === selectedDate && t.completed));
   saveTodos();
   render();
 };
 
-/* ================= 초기 실행 ================= */
+/* ================= 시작 ================= */
 loadTodos();
 renderDateStrip();
 render();
-  const openCalendarBtn = document.getElementById("openCalendarBtn");
-const calendarOverlay = document.getElementById("calendarOverlay");
-const fullCalendarInput = document.getElementById("fullCalendarInput");
-const calendarCancel = document.getElementById("calendarCancel");
-const calendarConfirm = document.getElementById("calendarConfirm");
-
-openCalendarBtn.addEventListener("click", () => {
-  fullCalendarInput.value = selectedDate;
-  calendarOverlay.style.display = "flex";
-});
-
-calendarCancel.addEventListener("click", () => {
-  calendarOverlay.style.display = "none";
-});
-
-calendarConfirm.addEventListener("click", () => {
-  if (fullCalendarInput.value) {
-    selectedDate = fullCalendarInput.value;
-    renderDateStrip();
-    render();
-  }
-  calendarOverlay.style.display = "none";
-});
-
 </script>
 
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js");
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
   });
 }
 </script>
 
 </body>
 </html>
-
-
