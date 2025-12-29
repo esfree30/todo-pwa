@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>To‑Do List</title>
+  <title>오늘의 할 일</title>
+
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#7bcfa3" />
+
   <style>
     * { box-sizing: border-box; }
 
@@ -30,22 +32,23 @@
     h1 {
       text-align: center;
       font-size: 22px;
-      margin: 0 0 10px 0;
+      margin: 0 0 10px;
     }
 
     .counter {
       text-align: center;
       font-size: 14px;
       color: #4f7f69;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
+    /* ===== 날짜 스트립 ===== */
     .date-strip {
       display: flex;
       gap: 8px;
       overflow-x: auto;
       padding: 6px 2px 12px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .date-item {
@@ -53,7 +56,7 @@
       min-width: 56px;
       padding: 8px 6px;
       border-radius: 14px;
-      background: #ffffff;
+      background: #fff;
       border: 1px solid #cfe6d8;
       text-align: center;
       cursor: pointer;
@@ -68,6 +71,11 @@
       font-weight: 600;
     }
 
+    .date-item.today {
+      border: 2px solid #4caf8f;
+      box-shadow: 0 0 0 2px rgba(123,207,163,0.25);
+    }
+
     .date-item .day {
       font-size: 11px;
       opacity: 0.8;
@@ -77,6 +85,18 @@
       font-size: 16px;
       font-weight: 600;
     }
+
+    /* 전체 달력 버튼 */
+    #openCalendarBtn {
+      display: block;
+      margin: 6px auto 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #e3f4ec;
+      color: #2f7d5b;
+      font-size: 13px;
+      cursor: pointer;
     }
 
     .input-row {
@@ -91,12 +111,6 @@
       border-radius: 999px;
       border: 1px solid #cfe6d8;
       font-size: 16px;
-      background: #ffffff;
-      outline: none;
-    }
-
-    input[type="text"]:focus {
-      border-color: #7bcfa3;
     }
 
     button {
@@ -104,29 +118,16 @@
       border: none;
       border-radius: 999px;
       background: #7bcfa3;
-      color: #ffffff;
+      color: white;
       font-size: 15px;
       cursor: pointer;
-    }
-
-    button:active {
-      transform: scale(0.97);
     }
 
     .clear-completed {
       width: 100%;
       margin-bottom: 14px;
-      padding: 12px;
-      border-radius: 999px;
-      border: none;
       background: #dff2e8;
       color: #3f7f5f;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .clear-completed:active {
-      transform: scale(0.98);
     }
 
     ul {
@@ -149,7 +150,6 @@
       align-items: center;
       gap: 10px;
       flex: 1;
-      min-width: 0;
     }
 
     .task span {
@@ -165,7 +165,19 @@
     input[type="checkbox"] {
       width: 18px;
       height: 18px;
-      flex: 0 0 auto;
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #f2c94c;
+      cursor: pointer;
+    }
+
+    .important span {
+      font-weight: 600;
+      color: #c89b00;
     }
 
     .delete-btn {
@@ -174,42 +186,24 @@
       color: #ff5b5b;
       font-size: 18px;
       cursor: pointer;
-      padding: 8px 10px;
-    }
-
-    .star-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      color: #f2c94c; /* 노랑 별 */
-      padding: 8px 10px;
-    }
-
-    .important span {
-      font-weight: 600;
-      color: #c89b00; /* 강조 노랑 */
     }
 
     .edit-input {
       flex: 1;
-      min-width: 0;
       font-size: 16px;
       padding: 8px 10px;
       border-radius: 10px;
       border: 1px solid #cfe6d8;
-      outline: none;
-      background: #fff;
     }
 
     .hint {
       text-align: center;
-      color: #6a8a7a;
       font-size: 12px;
+      color: #6a8a7a;
       margin-top: 10px;
     }
-  
-    /* === 달력 팝업 === */
+
+    /* ===== 달력 팝업 ===== */
     .calendar-overlay {
       position: fixed;
       inset: 0;
@@ -221,21 +215,15 @@
     }
 
     .calendar-modal {
-      background: #ffffff;
+      background: white;
       border-radius: 18px;
       padding: 20px;
       width: 90%;
       max-width: 320px;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
 
-    .calendar-modal h3 {
-      margin: 0 0 12px;
-      font-size: 18px;
-    }
-
-    .calendar-modal input[type="date"] {
+    .calendar-modal input {
       width: 100%;
       padding: 12px;
       border-radius: 12px;
@@ -267,383 +255,273 @@
       background: #eee;
       color: #555;
     }
-
+  </style>
 </head>
 <body>
-  <div class="calendar-overlay" id="calendarOverlay">
-    <div class="calendar-modal">
-      <h3>날짜 선택</h3>
-      <input type="date" id="fullCalendarInput" />
-      <div class="calendar-actions">
-        <button class="calendar-cancel" id="calendarCancel">취소</button>
-        <button class="calendar-ok" id="calendarConfirm">선택</button>
-      </div>
+
+<div class="calendar-overlay" id="calendarOverlay">
+  <div class="calendar-modal">
+    <h3>날짜 선택</h3>
+    <input type="date" id="fullCalendarInput" />
+    <div class="calendar-actions">
+      <button class="calendar-cancel" id="calendarCancel">취소</button>
+      <button class="calendar-ok" id="calendarConfirm">선택</button>
     </div>
   </div>
+</div>
 
-  <div class="app">
-    <h1>📝 오늘의 할 일</h1>
-    <div class="counter" id="counter">남은 할 일: 0개</div>
+<div class="app">
+  <h1>📝 오늘의 할 일</h1>
+  <div class="counter" id="counter">남은 할 일: 0개</div>
 
-    <button id="openCalendarBtn" style="margin:6px auto 10px;display:block;background:#e3f4ec;border:none;border-radius:999px;padding:8px 14px;font-size:13px;color:#2f7d5b;cursor:pointer;">📅 달력 전체 보기</button>
+  <div id="dateStrip" class="date-strip"></div>
+  <button id="openCalendarBtn">📅 달력 전체 보기</button>
 
-    <!-- 날짜별 관리: 선택한 날짜의 항목만 보여줍니다 -->
-    <div class="date-strip" id="dateStrip"></div>
-
-    <div class="input-row">
-      <input id="todoInput" type="text" placeholder="할 일을 입력하세요" />
-      <button id="addBtn" type="button">추가</button>
-    </div>
-
-    <button class="clear-completed" id="clearCompletedBtn" type="button">완료된 항목 모두 삭제</button>
-
-    <ul id="todoList"></ul>
-
-    <button id="installBtn" style="display:none;margin:12px auto 6px;display:block;padding:12px 18px;border-radius:999px;border:none;background:#7bcfa3;color:#fff;font-size:15px;cursor:pointer;">📲 앱 설치하기</button>
-
-    <div class="hint">팁: 할 일 텍스트를 더블클릭하면 수정할 수 있어요.</div>
+  <div class="input-row">
+    <input id="todoInput" type="text" placeholder="할 일을 입력하세요" />
+    <button id="addBtn">추가</button>
   </div>
 
-  <!-- 스크립트는 body 끝에 두어 DOM이 먼저 로드되도록 합니다 -->
-  <script>
-    // ===== PWA 설치 버튼 처리 =====
-    let deferredPrompt = null;
+  <button class="clear-completed" id="clearCompletedBtn">완료된 항목 모두 삭제</button>
 
-    const installBtn = document.getElementById('installBtn');
+  <ul id="todoList"></ul>
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'block';
-    });
+  <button id="installBtn" style="display:none;margin:12px auto 6px;display:block;">📲 앱 설치하기</button>
 
-    installBtn?.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
-    });
+  <div class="hint">팁: 할 일 텍스트를 더블클릭하면 수정할 수 있어요.</div>
+</div>
 
+<script>
+/* ================= PWA 설치 ================= */
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
 
-    (function () {
-      'use strict';
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block';
+});
 
-      // ====== 상수/키 ======
-      const STORAGE_KEY = 'todos_v1';
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+});
 
-      // ====== DOM 참조 ======
-      const input = document.getElementById('todoInput');
-      const counter = document.getElementById('counter');
-      const list = document.getElementById('todoList');
-      const dateStrip = document.getElementById('dateStrip');
-      const openCalendarBtn = document.getElementById('openCalendarBtn');
-      const calendarOverlay = document.getElementById('calendarOverlay');
-      const fullCalendarInput = document.getElementById('fullCalendarInput');
-      const calendarCancel = document.getElementById('calendarCancel');
-      const calendarConfirm = document.getElementById('calendarConfirm');
-      const addBtn = document.getElementById('addBtn');
-      const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+/* ================= 기본 로직 ================= */
+const STORAGE_KEY = 'todos_v1';
 
-      // DOM이 없으면(구조가 바뀌었거나 스크립트 위치가 잘못된 경우) 빠르게 알려줌
-      if (!input || !counter || !list || !datePicker || !addBtn || !clearCompletedBtn) {
-        throw new Error('필수 DOM 요소를 찾지 못했습니다. HTML에 #datePicker, #todoInput, #todoList 등이 존재하는지 확인하세요.');
-      }
+const input = document.getElementById('todoInput');
+const counter = document.getElementById('counter');
+const list = document.getElementById('todoList');
+const dateStrip = document.getElementById('dateStrip');
 
-      // 오늘 날짜 기본값
-      const today = new Date();
-      let selectedDate = formatDate(today);
-      renderDateStrip();
-      fullCalendarInput.value = selectedDate;
+const openCalendarBtn = document.getElementById('openCalendarBtn');
+const calendarOverlay = document.getElementById('calendarOverlay');
+const fullCalendarInput = document.getElementById('fullCalendarInput');
+const calendarCancel = document.getElementById('calendarCancel');
+const calendarConfirm = document.getElementById('calendarConfirm');
 
-      // ====== 데이터 구조 ======
-      // todos = [{ id, text, completed, important, date }]
-      let todos = [];
+let todos = [];
 
-      // ====== 저장/로드 ======
-      function saveTodos() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-      }
+function formatDate(d) {
+  return d.toISOString().split('T')[0];
+}
 
-      function loadTodos() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return;
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            // 방어적으로 필드 보정
-            todos = parsed
-              .filter(t => t && typeof t.text === 'string')
-              .map(t => ({
-                id: typeof t.id === 'string' ? t.id : cryptoRandomId(),
-                text: t.text,
-                completed: !!t.completed,
-                important: !!t.important,
-                date: typeof t.date === 'string' ? t.date : today
-              }));
-          }
-        } catch {
-          // 깨진 저장값이면 무시
-          todos = [];
-        }
-      }
+let selectedDate = formatDate(new Date());
 
-      // ====== 유틸 ======
-      function cryptoRandomId() {
-        // crypto.randomUUID가 있으면 사용, 없으면 대체
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-        return 'id_' + Math.random().toString(16).slice(2) + '_' + Date.now();
-      }
+function saveTodos() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+}
 
-      function getSelectedDate() {
-        return selectedDate;
-      }
-
-      function getVisibleTodos() {
-        const selected = getSelectedDate();
-        return todos.filter(t => t.date === selected);
-      }
-
-      function updateCounter() {
-        const remaining = getVisibleTodos().filter(t => !t.completed).length;
-        counter.textContent = `남은 할 일: ${remaining}개`;
-      }
-
-      function formatDate(d) {
-        return d.toISOString().split('T')[0];
-      }
-
-      function renderDateStrip() {
-        dateStrip.innerHTML = '';
-
-        for (let i = -3; i <= 3; i++) {
-          const d = new Date();
-          d.setDate(d.getDate() + i);
-          const value = formatDate(d);
-
-          const item = document.createElement('div');
-          item.className = 'date-item' + (value === selectedDate ? ' active' : '');
-
-          const day = document.createElement('div');
-          day.className = 'day';
-          day.textContent = ['일','월','화','수','목','금','토'][d.getDay()];
-
-          const num = document.createElement('div');
-          num.className = 'num';
-          num.textContent = d.getDate();
-
-          item.appendChild(day);
-          item.appendChild(num);
-
-          item.addEventListener('click', () => {
-            selectedDate = value;
-            renderDateStrip();
-            renderDateStrip();
-      renderDateStrip();
-      render();
-          });
-
-          dateStrip.appendChild(item);
-        }
-      }
-
-      // ====== 렌더 ======
-      function render() {
-        const visible = getVisibleTodos();
-
-        // 목록 비우기
-        list.innerHTML = '';
-
-        // 보이는 항목 렌더
-        visible.forEach(t => {
-          const li = document.createElement('li');
-          li.dataset.id = t.id;
-          if (t.completed) li.classList.add('completed');
-          if (t.important) li.classList.add('important');
-
-          const taskDiv = document.createElement('div');
-          taskDiv.className = 'task';
-
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.checked = t.completed;
-
-          const span = document.createElement('span');
-          span.textContent = t.text;
-
-          // ✏️ 수정 (더블클릭)
-          span.addEventListener('dblclick', () => {
-            enterEditMode(li, taskDiv, span, t.id);
-          });
-
-          checkbox.addEventListener('change', () => {
-            toggleCompleted(t.id, checkbox.checked);
-          });
-
-          taskDiv.appendChild(checkbox);
-          taskDiv.appendChild(span);
-
-          const starBtn = document.createElement('button');
-          starBtn.className = 'star-btn';
-          starBtn.type = 'button';
-          starBtn.textContent = t.important ? '★' : '☆';
-          starBtn.onclick = () => toggleImportant(t.id);
-
-          const deleteBtn = document.createElement('button');
-          deleteBtn.className = 'delete-btn';
-          deleteBtn.type = 'button';
-          deleteBtn.textContent = '✕';
-          deleteBtn.onclick = () => deleteTodo(t.id);
-
-          li.appendChild(taskDiv);
-          li.appendChild(starBtn);
-          li.appendChild(deleteBtn);
-
-          list.appendChild(li);
-        });
-
-        updateCounter();
-      }
-
-      // ====== 동작 함수 ======
-      function addTodo() {
-        const text = input.value.trim();
-        if (!text) return;
-
-        const selectedDate = getSelectedDate();
-        const newTodo = {
-          id: cryptoRandomId(),
-          text,
-          completed: false,
-          important: false,
-          date: selectedDate
-        };
-
-        todos.push(newTodo);
-        input.value = '';
-        saveTodos();
-        render();
-      }
-
-      function deleteTodo(id) {
-        todos = todos.filter(t => t.id !== id);
-        saveTodos();
-        render();
-      }
-
-      function toggleCompleted(id, checked) {
-        const t = todos.find(x => x.id === id);
-        if (!t) return;
-        t.completed = !!checked;
-        saveTodos();
-        render();
-      }
-
-      function toggleImportant(id) {
-        const t = todos.find(x => x.id === id);
-        if (!t) return;
-        t.important = !t.important;
-        saveTodos();
-        render();
-      }
-
-      function clearCompleted() {
-        const selected = getSelectedDate();
-        // 선택한 날짜의 완료 항목만 삭제 (가정)
-        todos = todos.filter(t => !(t.date === selected && t.completed));
-        saveTodos();
-        render();
-      }
-
-      function enterEditMode(li, taskDiv, span, id) {
-        // 이미 수정 모드면 중복 진입 방지
-        const existing = taskDiv.querySelector('input.edit-input');
-        if (existing) return;
-
-        const edit = document.createElement('input');
-        edit.className = 'edit-input';
-        edit.type = 'text';
-        edit.value = span.textContent;
-
-        taskDiv.replaceChild(edit, span);
-        edit.focus();
-        edit.setSelectionRange(edit.value.length, edit.value.length);
-
-        const commit = () => {
-          const next = edit.value.trim();
-          const t = todos.find(x => x.id === id);
-          if (t && next) t.text = next;
-          // 빈 값이면 변경하지 않음
-          saveTodos();
-          render();
-        };
-
-        const cancel = () => {
-          render();
-        };
-
-        edit.addEventListener('blur', commit);
-        edit.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            commit();
-          }
-          if (e.key === 'Escape') {
-            e.preventDefault();
-            cancel();
-          }
-        });
-      }
-
-      // ====== 날짜 팝업 이벤트 ======
-      openCalendarBtn.addEventListener('click', () => {
-        fullCalendarInput.value = selectedDate;
-        calendarOverlay.style.display = 'flex';
-      });
-
-      calendarCancel.addEventListener('click', () => {
-        calendarOverlay.style.display = 'none';
-      });
-
-      calendarConfirm.addEventListener('click', () => {
-        if (fullCalendarInput.value) {
-          selectedDate = fullCalendarInput.value;
-          renderDateStrip();
-          render();
-        }
-        calendarOverlay.style.display = 'none';
-      });
-
-      // ====== 이벤트 바인딩 ======
-      addBtn.addEventListener('click', addTodo);
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') addTodo();
-      });
-      clearCompletedBtn.addEventListener('click', clearCompleted);
-      
-
-      // ====== 간단 테스트(콘솔) ======
-      // 개발 중 빠르게 확인하기 위한 최소 검증
-      function runSelfTests() {
-        // datePicker 값이 있어야 함
-        console.assert(!!getSelectedDate(), 'TEST: selected date should exist');
-        // todos는 배열이어야 함
-        console.assert(Array.isArray(todos), 'TEST: todos should be an array');
-      }
-
-      // ====== 초기화 ======
-      loadTodos();
-      runSelfTests();
-      render();
-    })();
-  </script>
-  <script>
-    // PWA 서비스 워커 등록
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(console.error);
-      });
+function loadTodos() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      todos = JSON.parse(saved);
+    } catch {
+      todos = [];
     }
-  </script>
+  }
+}
+
+function renderDateStrip() {
+  dateStrip.innerHTML = '';
+  for (let i = -3; i <= 3; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const value = formatDate(d);
+
+    const item = document.createElement('div');
+    item.className =
+      'date-item' +
+      (value === selectedDate ? ' active' : '') +
+      (value === formatDate(new Date()) ? ' today' : '');
+
+    const day = document.createElement('div');
+    day.className = 'day';
+    day.textContent = ['일','월','화','수','목','금','토'][d.getDay()];
+
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = d.getDate();
+
+    item.appendChild(day);
+    item.appendChild(num);
+
+    item.onclick = () => {
+      selectedDate = value;
+      renderDateStrip();
+      render();
+    };
+
+    dateStrip.appendChild(item);
+  }
+}
+
+function getVisibleTodos() {
+  return todos.filter(t => t.date === selectedDate);
+}
+
+function updateCounter() {
+  const count = getVisibleTodos().filter(t => !t.completed).length;
+  counter.textContent = `남은 할 일: ${count}개`;
+}
+
+function render() {
+  list.innerHTML = '';
+  getVisibleTodos().forEach(t => {
+    const li = document.createElement('li');
+    if (t.completed) li.classList.add('completed');
+    if (t.important) li.classList.add('important');
+
+    const task = document.createElement('div');
+    task.className = 'task';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = t.completed;
+    checkbox.onchange = () => {
+      t.completed = checkbox.checked;
+      saveTodos();
+      render();
+    };
+
+    const span = document.createElement('span');
+    span.textContent = t.text;
+
+    span.ondblclick = () => editTodo(span, t);
+
+    task.appendChild(checkbox);
+    task.appendChild(span);
+
+    const star = document.createElement('button');
+    star.className = 'star-btn';
+    star.textContent = t.important ? '★' : '☆';
+    star.onclick = () => {
+      t.important = !t.important;
+      saveTodos();
+      render();
+    };
+
+    const del = document.createElement('button');
+    del.className = 'delete-btn';
+    del.textContent = '✕';
+    del.onclick = () => {
+      todos = todos.filter(x => x !== t);
+      saveTodos();
+      render();
+    };
+
+    li.appendChild(task);
+    li.appendChild(star);
+    li.appendChild(del);
+
+    list.appendChild(li);
+  });
+
+  updateCounter();
+}
+
+function editTodo(span, todo) {
+  const input = document.createElement('input');
+  input.className = 'edit-input';
+  input.value = todo.text;
+
+  span.replaceWith(input);
+  input.focus();
+
+  input.onblur = () => finishEdit(input, todo);
+  input.onkeydown = e => {
+    if (e.key === 'Enter') finishEdit(input, todo);
+    if (e.key === 'Escape') render();
+  };
+}
+
+function finishEdit(input, todo) {
+  const val = input.value.trim();
+  if (val) todo.text = val;
+  saveTodos();
+  render();
+}
+
+document.getElementById('addBtn').onclick = () => {
+  const text = input.value.trim();
+  if (!text) return;
+
+  todos.push({
+    id: crypto.randomUUID(),
+    text,
+    completed: false,
+    important: false,
+    date: selectedDate
+  });
+
+  input.value = '';
+  saveTodos();
+  render();
+};
+
+document.getElementById('clearCompletedBtn').onclick = () => {
+  todos = todos.filter(t => !(t.date === selectedDate && t.completed));
+  saveTodos();
+  render();
+};
+
+/* 달력 팝업 */
+openCalendarBtn.onclick = () => {
+  fullCalendarInput.value = selectedDate;
+  calendarOverlay.style.display = 'flex';
+};
+
+calendarCancel.onclick = () => {
+  calendarOverlay.style.display = 'none';
+};
+
+calendarConfirm.onclick = () => {
+  if (fullCalendarInput.value) {
+    selectedDate = fullCalendarInput.value;
+    renderDateStrip();
+    render();
+  }
+  calendarOverlay.style.display = 'none';
+};
+
+/* 초기 실행 */
+loadTodos();
+renderDateStrip();
+render();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+
 </body>
 </html>
