@@ -239,7 +239,6 @@
     }
 
     .calendar-cell .dot.done { background: #9fb7ad; }
-
   </style>
 </head>
 <body>
@@ -247,11 +246,10 @@
 <div class="calendar-overlay" id="calendarOverlay">
   <div class="calendar-modal">
     <div class="calendar-header">
-      <button id="prevMonth" onclick="prevMonth()">◀</button>
+      <button id="prevMonth">◀</button>
       <div class="calendar-title" id="calendarTitle"></div>
-      <button id="nextMonth" onclick="nextMonth()">▶</button>
+      <button id="nextMonth">▶</button>
     </div>
-
     <div class="calendar-grid" id="calendarGrid"></div>
   </div>
 </div>
@@ -271,7 +269,8 @@
   <button class="clear-completed" id="clearCompletedBtn">완료된 항목 모두 삭제</button>
 
   <ul id="todoList"></ul>
-  <div class="hint">날짜 클릭 → 해당 날짜 일정 · 더블클릭으로 수정</div>
+
+  <div class="hint">날짜 클릭 → 해당 날짜 일정 / 더블클릭 수정</div>
 </div>
 
 <script>
@@ -358,12 +357,6 @@ function renderMonthCalendar() {
   const month = calendarMonth.getMonth();
 
   calendarTitle.textContent = `${year}년 ${month + 1}월`;
-  calendarGrid.innerHTML = '';
-
-  const year = calendarMonth.getFullYear();
-  const month = calendarMonth.getMonth();
-
-  calendarTitle.textContent = `${year}년 ${month + 1}월`;
 
   const firstDay = new Date(year, month, 1).getDay();
   const lastDate = new Date(year, month + 1, 0).getDate();
@@ -428,14 +421,14 @@ function render() {
     span.textContent = t.text;
 
     span.ondblclick = () => {
-      const inputEdit = document.createElement('input');
-      inputEdit.value = t.text;
-      inputEdit.className = 'edit-input';
-      task.replaceChild(inputEdit, span);
-      inputEdit.focus();
+      const edit = document.createElement('input');
+      edit.className = 'edit-input';
+      edit.value = t.text;
+      task.replaceChild(edit, span);
+      edit.focus();
 
-      inputEdit.onblur = () => {
-        t.text = inputEdit.value.trim() || t.text;
+      edit.onblur = () => {
+        t.text = edit.value.trim() || t.text;
         saveTodos();
         render();
       };
@@ -478,28 +471,18 @@ calendarOverlay.addEventListener('click', e => {
   if (e.target === calendarOverlay) calendarOverlay.style.display = 'none';
 });
 
-function prevMonth() {
-  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
-  renderMonthCalendar();
-}
-
-function nextMonth() {
-  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
-  renderMonthCalendar();
-}
-
 // 월 이동
 document.getElementById('prevMonth').onclick = () => {
-  calendarMonth.setMonth(calendarMonth.getMonth() - 1);
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
   renderMonthCalendar();
 };
 
 document.getElementById('nextMonth').onclick = () => {
-  calendarMonth.setMonth(calendarMonth.getMonth() + 1);
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
   renderMonthCalendar();
 };
 
-// 추가 버튼
+// 추가
 document.getElementById('addBtn').onclick = () => {
   const text = input.value.trim();
   if (!text) return;
@@ -524,7 +507,7 @@ document.getElementById('clearCompletedBtn').onclick = () => {
   render();
 };
 
-/* ================= 시작 ================= */
+/* ================= 초기 실행 ================= */
 loadTodos();
 renderDateStrip();
 render();
