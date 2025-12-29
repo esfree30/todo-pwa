@@ -368,7 +368,31 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
   });
 }
+if ("Notification" in window && Notification.permission === "default") {
+  Notification.requestPermission();
+}
+function startNotificationWatcher() {
+  if (!navigator.serviceWorker.controller) return;
+
+  setInterval(() => {
+    navigator.serviceWorker.controller.postMessage({
+      type: "CHECK_TODOS",
+      todos: JSON.parse(localStorage.getItem("todos_v1") || "[]")
+    });
+  }, 30000); // 30초마다 체크
+}
+
+navigator.serviceWorker.ready.then(() => {
+  startNotificationWatcher();
+});
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data?.type === "UPDATED_TODOS") {
+    localStorage.setItem("todos_v1", JSON.stringify(event.data.todos));
+  }
+});
+
 </script>
 
 </body>
 </html>
+
