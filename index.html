@@ -9,10 +9,11 @@
 
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #eaf5ef;
+      background: linear-gradient(180deg, #e9f7f0 0%, #f6fbf9 100%);
       display: flex;
       justify-content: center;
       padding: 20px;
@@ -21,68 +22,112 @@
     .app {
       width: 100%;
       max-width: 420px;
-      background: #f7fbf9;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      background: #ffffff;
+      border-radius: 26px;
+      padding: 20px 18px 22px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
     }
 
-    h1 { text-align:center; margin-bottom:8px; }
+    h1 { text-align:center; margin:6px 0 10px; }
 
-    .counter { text-align:center; font-size:14px; color:#4f7f69; margin-bottom:10px; }
+    .counter { text-align:center; font-size:13px; color:#5a8f77; margin-bottom:12px; }
 
-    .date-strip { display:flex; gap:8px; overflow-x:auto; padding:6px 2px 12px; }
+    .date-strip {
+      display:flex; gap:8px; overflow-x:auto; padding:6px 2px 14px;
+    }
 
     .date-item {
-      min-width:56px; padding:8px 6px; border-radius:14px;
-      background:#fff; border:1px solid #cfe6d8;
-      text-align:center; cursor:pointer; font-size:12px; color:#3f7f5f;
+      min-width:60px; padding:10px 6px 8px; border-radius:16px;
+      background:#f4faf7; border:1px solid #d9efe4;
+      text-align:center; cursor:pointer; font-size:12px;
+      color:#3f7f5f;
     }
-    .date-item.active { background:#7bcfa3; color:#fff; border-color:#7bcfa3; }
-    .date-item.today { border:2px solid #4caf8f; }
-    .date-item .num { font-size:16px; font-weight:600; }
+
+    .date-item.active { background:#7bcfa3; color:#fff; }
+    .date-item.today { outline:2px solid rgba(76,175,143,.5); }
+
+    .date-item .num { font-size:17px; font-weight:700; }
 
     .date-item .dot {
       width:6px;height:6px;border-radius:50%;margin:4px auto 0;background:#4caf8f;
     }
-    .date-item .dot.done { background:#9fb7ad; }
 
-    #openCalendarBtn { margin:6px auto 12px; display:block; padding:8px 14px; border:none; border-radius:999px; background:#e3f4ec; color:#2f7d5b; }
+    .date-item .dot.done { background:#b9d8cc; }
 
-    .input-row { display:flex; gap:6px; margin-bottom:12px; }
-
-    input[type=text], input[type=time] {
-      padding:12px; border-radius:999px; border:1px solid #cfe6d8; font-size:14px;
+    #openCalendarBtn {
+      display:block; margin:6px auto 14px; padding:9px 16px;
+      border:none; border-radius:999px;
+      background:#e3f4ec; color:#2f7d5b;
     }
 
-    input[type=text] { flex:1; }
+    .input-row {
+      display:flex; flex-direction:column; gap:10px; margin-bottom:12px;
+    }
 
-    button { padding:12px 14px; border:none; border-radius:999px; background:#7bcfa3; color:white; cursor:pointer; }
+    input, select {
+      padding:14px 16px;
+      border-radius:999px;
+      border:1px solid #d4eadf;
+      font-size:15px;
+      background:#fbfefd;
+    }
 
-    .clear-completed { width:100%; margin-bottom:12px; background:#dff2e8; color:#3f7f5f; }
+    button {
+      padding:13px 16px;
+      border:none;
+      border-radius:999px;
+      background:linear-gradient(135deg,#7bcfa3,#6bc69a);
+      color:white;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .clear-completed {
+      width:100%; margin-bottom:14px; background:#e9f6ef; color:#3f7f5f;
+    }
 
     ul { list-style:none; padding:0; margin:0; }
 
-    li { display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #e3efe9; }
+    li {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 10px; border-bottom:1px solid #edf4f1;
+    }
 
     .task { display:flex; align-items:center; gap:10px; flex:1; }
 
-    .completed span { text-decoration:line-through; color:#aaa; }
+    .completed span { text-decoration:line-through; color:#aab7b1; }
 
-    .star-btn { background:none; border:none; font-size:18px; color:#f2c94c; cursor:pointer; }
-    .delete-btn { background:none; border:none; color:#ff5b5b; font-size:18px; cursor:pointer; }
+    .star-btn { background:none; border:none; font-size:20px; color:#f2c94c; }
+    .delete-btn { background:none; border:none; font-size:18px; color:#ff6b6b; }
 
     .hint { text-align:center; font-size:12px; color:#6a8a7a; margin-top:10px; }
 
-    .calendar-overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; justify-content:center; align-items:center; z-index:999; }
-    .calendar-modal { background:#fff; border-radius:18px; padding:16px; width:95%; max-width:360px; }
-    .calendar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; text-align:center; }
-    .calendar-cell { padding:8px 0; border-radius:10px; cursor:pointer; }
-    .calendar-cell.today { border:2px solid #4caf8f; }
+    .calendar-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.35);
+      display:none; justify-content:center; align-items:center; z-index:999;
+    }
+
+    .calendar-modal {
+      background:#fff; border-radius:22px; padding:18px; width:92%; max-width:360px;
+    }
+
+    .calendar-header {
+      display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+    }
+
+    .calendar-grid {
+      display:grid; grid-template-columns:repeat(7,1fr); gap:6px; text-align:center;
+    }
+
+    .calendar-cell {
+      padding:10px 0; border-radius:12px; cursor:pointer;
+    }
+
+    .calendar-cell.today { outline:2px solid #7bcfa3; }
     .calendar-cell.selected { background:#7bcfa3; color:#fff; }
-    .calendar-cell .dot { width:6px;height:6px;margin:4px auto 0;border-radius:50%;background:#4caf8f; }
-    .calendar-cell .dot.done { background:#9fb7ad; }
+
+    .calendar-cell .dot { width:6px; height:6px; margin:4px auto 0; border-radius:50%; background:#4caf8f; }
+    .calendar-cell .dot.done { background:#b8d7cb; }
   </style>
 </head>
 <body>
@@ -100,6 +145,18 @@
 
 <div class="app">
   <h1>📝 오늘의 할 일</h1>
+
+  <!-- ✅ 오늘 요약 카드 -->
+  <div id="summaryCard" style="margin:12px 0 14px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,#e8f7f0,#f6fbf9);box-shadow:0 6px 16px rgba(0,0,0,.06);">
+    <div style="font-size:14px;color:#3f7f5f;font-weight:600;">📅 오늘</div>
+    <div id="summaryDate" style="font-size:13px;color:#6a8a7a;margin-top:2px;"></div>
+
+    <div style="margin-top:10px;font-size:15px;">
+      ⏳ 남은 할 일 <b id="summaryRemain">0</b>개
+    </div>
+
+    <div id="summaryImportant" style="margin-top:6px;font-size:14px;color:#2f7d5b;"></div>
+  </div>
   <div class="counter" id="counter"></div>
 
   <div id="dateStrip" class="date-strip"></div>
@@ -107,23 +164,28 @@
 
   <div class="input-row">
     <input id="todoInput" type="text" placeholder="할 일을 입력하세요" />
-    <input id="timeInput" type="time" />
+    
+    <select id="repeatSelect">
+      <option value="none">반복 없음</option>
+      <option value="daily">매일</option>
+      <option value="weekly">매주</option>
+    </select>
     <button id="addBtn">추가</button>
   </div>
 
   <button class="clear-completed" id="clearCompletedBtn">완료된 항목 모두 삭제</button>
 
   <ul id="todoList"></ul>
-  <div class="hint">⏰ 시간 설정 시 알림이 울립니다</div>
+  
 </div>
 
 <script>
-/* ================= 기본 유틸 ================= */
-function pad2(n){ return String(n).padStart(2,'0'); }
-function formatDateLocal(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+/* ===== 유틸 ===== */
+function pad(n){return String(n).padStart(2,'0');}
+function formatDateLocal(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+function parseDateLocal(str){const [y,m,d]=str.split('-').map(Number);return new Date(y,m-1,d);} 
 
-const STORAGE_KEY = 'todos_v2';
-
+const STORAGE_KEY = 'todos_v3';
 let todos = [];
 let selectedDate = formatDateLocal(new Date());
 let calendarMonth = new Date();
@@ -132,116 +194,144 @@ const dateStrip = document.getElementById('dateStrip');
 const list = document.getElementById('todoList');
 const counter = document.getElementById('counter');
 const input = document.getElementById('todoInput');
-const timeInput = document.getElementById('timeInput');
-const addBtn = document.getElementById('addBtn');
 
-const calendarOverlay = document.getElementById('calendarOverlay');
-const calendarGrid = document.getElementById('calendarGrid');
-const calendarTitle = document.getElementById('calendarTitle');
+const repeatSelect = document.getElementById('repeatSelect');
 
-/* ===== 저장 ===== */
+/* 저장 */
 function saveTodos(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); }
-function loadTodos(){
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if(saved) try { todos = JSON.parse(saved); } catch { todos = []; }
+function loadTodos(){ try{ todos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }catch{ todos=[];} }
+
+/* 날짜별 표시 판단 (반복 포함) */
+function matchesDate(todo, dateStr){
+  if(todo.repeat === 'none') return todo.date === dateStr;
+
+  const base = parseDateLocal(todo.date);
+  const cur = parseDateLocal(dateStr);
+
+  if(cur < base) return false;
+
+  if(todo.repeat === 'daily') return true;
+
+  if(todo.repeat === 'weekly'){
+    return base.getDay() === cur.getDay();
+  }
+  return false;
 }
 
-/* ===== 날짜 스트립 ===== */
+/* 날짜 스트립 */
 function renderDateStrip(){
   dateStrip.innerHTML = '';
   for(let i=-3;i<=3;i++){
-    const d = new Date(selectedDate);
+    const d = parseDateLocal(selectedDate);
     d.setDate(d.getDate()+i);
-    const value = formatDateLocal(d);
-
-    const dayTodos = todos.filter(t=>t.date===value);
-    const hasTodos = dayTodos.length>0;
-    const allDone = hasTodos && dayTodos.every(t=>t.completed);
+    const val = formatDateLocal(d);
 
     const item = document.createElement('div');
-    item.className = 'date-item' + (value===selectedDate?' active':'') + (value===formatDateLocal(new Date())?' today':'');
+    item.className = 'date-item' + (val===selectedDate?' active':'') + (val===formatDateLocal(new Date())?' today':'');
 
     const day = document.createElement('div');
     day.textContent = ['일','월','화','수','목','금','토'][d.getDay()];
-
     const num = document.createElement('div');
-    num.className='num';
-    num.textContent=d.getDate();
+    num.className='num'; num.textContent=d.getDate();
 
     item.append(day,num);
 
-    if(hasTodos){
+    const related = todos.filter(t=>matchesDate(t,val));
+    if(related.length){
       const dot=document.createElement('div');
-      dot.className='dot'+(allDone?' done':'');
+      dot.className='dot' + (related.every(t=>t.completed)?' done':'');
       item.appendChild(dot);
     }
 
-    item.onclick=()=>{ selectedDate=value; renderDateStrip(); render(); };
+    item.onclick=()=>{ selectedDate=val; renderDateStrip(); render(); };
     dateStrip.appendChild(item);
   }
 }
 
-/* ===== 월 달력 ===== */
+/* 월 달력 */
 function renderMonthCalendar(){
-  calendarGrid.innerHTML='';
-  const y=calendarMonth.getFullYear();
-  const m=calendarMonth.getMonth();
-  calendarTitle.textContent=`${y}년 ${m+1}월`;
+  const grid = document.getElementById('calendarGrid');
+  const title = document.getElementById('calendarTitle');
+  grid.innerHTML='';
 
-  const first=new Date(y,m,1).getDay();
-  const last=new Date(y,m+1,0).getDate();
+  const y = calendarMonth.getFullYear();
+  const m = calendarMonth.getMonth();
+  title.textContent = `${y}년 ${m+1}월`;
 
-  for(let i=0;i<first;i++) calendarGrid.appendChild(document.createElement('div'));
+  const first = new Date(y,m,1).getDay();
+  const last = new Date(y,m+1,0).getDate();
+
+  for(let i=0;i<first;i++) grid.appendChild(document.createElement('div'));
 
   for(let d=1; d<=last; d++){
-    const cell=document.createElement('div');
-    const dateStr=formatDateLocal(new Date(y,m,d));
-
+    const dateObj = new Date(y,m,d);
+    const dateStr = formatDateLocal(dateObj);
+    const cell = document.createElement('div');
     cell.className='calendar-cell';
     cell.textContent=d;
 
     if(dateStr===formatDateLocal(new Date())) cell.classList.add('today');
     if(dateStr===selectedDate) cell.classList.add('selected');
 
-    const dayTodos=todos.filter(t=>t.date===dateStr);
-    if(dayTodos.length){
+    const related = todos.filter(t=>matchesDate(t,dateStr));
+    if(related.length){
       const dot=document.createElement('div');
-      dot.className='dot'+(dayTodos.every(t=>t.completed)?' done':'');
+      dot.className='dot'+(related.every(t=>t.completed)?' done':'');
       cell.appendChild(dot);
     }
 
     cell.onclick=()=>{
       selectedDate=dateStr;
-      calendarOverlay.style.display='none';
+      document.getElementById('calendarOverlay').style.display='none';
       renderDateStrip();
       render();
     };
 
-    calendarGrid.appendChild(cell);
+    grid.appendChild(cell);
   }
 }
 
-/* ===== 렌더 ===== */
+/* 렌더 */
 function render(){
+  updateSummary();
   list.innerHTML='';
-  const visible=todos.filter(t=>t.date===selectedDate);
+
+  // 오늘 날짜
+  const today = formatDateLocal(new Date());
+
+  // 오늘 일정 먼저 정렬
+  let visible = todos.filter(t=>matchesDate(t, selectedDate));
+
+  if (selectedDate === today) {
+    visible = [...visible].sort((a,b)=>{
+      if (a.completed !== b.completed) return a.completed - b.completed;
+      return 0;
+    });
+  }
 
   visible.forEach(t=>{
     const li=document.createElement('li');
     if(t.completed) li.classList.add('completed');
 
+    // ⭐ 오늘 일정 강조
+    if(selectedDate === today){
+      li.style.background = '#f3fbf7';
+      li.style.borderRadius = '12px';
+      li.style.marginBottom = '4px';
+    }
+
     const task=document.createElement('div');
     task.className='task';
 
-    const checkbox=document.createElement('input');
-    checkbox.type='checkbox';
-    checkbox.checked=t.completed;
-    checkbox.onchange=()=>{ t.completed=checkbox.checked; saveTodos(); render(); };
+    const cb=document.createElement('input');
+    cb.type='checkbox';
+    cb.checked=t.completed;
+    cb.onchange=()=>{ t.completed=cb.checked; saveTodos(); render(); };
 
     const span=document.createElement('span');
     span.textContent=t.text;
 
-    task.append(checkbox,span);
+    task.append(cb,span);
 
     const star=document.createElement('button');
     star.className='star-btn';
@@ -257,18 +347,11 @@ function render(){
     list.appendChild(li);
   });
 
-  counter.textContent=`남은 할 일: ${visible.filter(t=>!t.completed).length}개`;
+  counter.textContent = `남은 할 일: ${visible.filter(t=>!t.completed).length}개`;
+}
 }
 
-/* ===== 이벤트 ===== */
-addBtn.onclick=addTodo;
-input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addTodo(); }});
-
-document.getElementById('clearCompletedBtn').onclick=()=>{
-  todos=todos.filter(t=>!(t.date===selectedDate && t.completed));
-  saveTodos(); render();
-};
-
+/* 추가 */
 function addTodo(){
   const text=input.value.trim();
   if(!text) return;
@@ -279,25 +362,35 @@ function addTodo(){
     completed:false,
     important:false,
     date:selectedDate,
-    time: timeInput.value || null
+    time: null,
+    repeat: repeatSelect.value
   });
 
   input.value='';
-  timeInput.value='';
+  
+  repeatSelect.value='none';
   saveTodos();
   render();
 }
 
-/* 달력 열기 */
+/* 이벤트 */
+document.getElementById('addBtn').onclick=addTodo;
+input.addEventListener('keydown',e=>{ if(e.key==='Enter') addTodo(); });
+
+document.getElementById('clearCompletedBtn').onclick=()=>{
+  todos = todos.filter(t=>!(matchesDate(t,selectedDate) && t.completed));
+  saveTodos(); render();
+};
+
+// 달력 열기
+const overlay=document.getElementById('calendarOverlay');
 document.getElementById('openCalendarBtn').onclick=()=>{
   calendarMonth=new Date(selectedDate);
-  calendarOverlay.style.display='flex';
+  overlay.style.display='flex';
   renderMonthCalendar();
 };
 
-calendarOverlay.addEventListener('click',e=>{
-  if(e.target===calendarOverlay) calendarOverlay.style.display='none';
-});
+overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.style.display='none'; });
 
 document.getElementById('prevMonth').onclick=()=>{
   calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);
@@ -309,19 +402,40 @@ document.getElementById('nextMonth').onclick=()=>{
   renderMonthCalendar();
 };
 
-/* 초기 실행 */
+/* 초기화 */
 loadTodos();
 renderDateStrip();
 render();
-</script>
+  <script>
+function updateSummary() {
+  const today = formatDateLocal(new Date());
 
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js');
+  const todayTodos = todos.filter(t => matchesDate(t, today));
+  const remaining = todayTodos.filter(t => !t.completed);
+  const important = todayTodos.find(t => t.important && !t.completed);
+
+  // 날짜 표시
+  const dateText = new Date().toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short'
   });
+
+  document.getElementById('summaryDate').textContent = dateText;
+  document.getElementById('summaryRemain').textContent = remaining.length;
+
+  const importantBox = document.getElementById('summaryImportant');
+
+  if (important) {
+    importantBox.textContent = `⭐ 가장 중요한 일: ${important.text}`;
+  } else if (remaining.length > 0) {
+    importantBox.textContent = `오늘 해야 할 일이 있어요 👍`;
+  } else {
+    importantBox.textContent = `오늘 할 일 모두 완료했어요 🎉`;
+  }
 }
 </script>
 
+</script>
 </body>
 </html>
