@@ -1,4 +1,4 @@
-const CACHE_NAME = "todo-pwa-v3";
+const CACHE_NAME = "todo-pwa-v99";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
@@ -28,5 +28,6 @@ self.addEventListener("fetch", event => {
     caches.match(event.request).then(res => res || fetch(event.request))
   );
 });
+
 
 
