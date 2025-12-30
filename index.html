@@ -246,21 +246,31 @@ function setCompletedOnDate(todo, dateStr, value){
 
 /* ---------- 요약 ---------- */
 function updateSummary(){
-  const today = formatDateLocal(new Date());
-  const todayTodos = todos.filter(t => matchesDate(t, today));
-  const remaining = todayTodos.filter(t => !isCompletedOnDate(t, today));
-  const important = todayTodos.find(t => t.important && !isCompletedOnDate(t, today));
+  const target = selectedDate; // ✅ 선택한 날짜로 연동
+  const isToday = target === formatDateLocal(new Date());
 
-  document.getElementById('summaryDate').textContent =
-    new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+  const targetTodos = todos.filter(t => matchesDate(t, target));
+  const remaining = targetTodos.filter(t => !isCompletedOnDate(t, target));
+  const important = targetTodos.find(t => t.important && !isCompletedOnDate(t, target));
+
+  // 날짜 표시(선택한 날짜 기준)
+  const dateObj = parseDateLocal(target);
+  document.getElementById('summaryDate').textContent = dateObj.toLocaleDateString('ko-KR', {
+    month:'long', day:'numeric', weekday:'short'
+  });
+
+  // 제목도 오늘/선택한 날짜 느낌으로(원하면 삭제 가능)
+  const titleEl = document.querySelector('#summaryCard > div:first-child');
+  if (titleEl) titleEl.textContent = isToday ? '📅 오늘' : '📅 선택한 날짜';
 
   document.getElementById('summaryRemain').textContent = remaining.length;
 
   const box = document.getElementById('summaryImportant');
   if (important) box.textContent = `⭐ 가장 중요한 일: ${important.text}`;
-  else if (remaining.length) box.textContent = '오늘 해야 할 일이 있어요 👍';
-  else box.textContent = '오늘 할 일 모두 완료했어요 🎉';
+  else if (remaining.length) box.textContent = '해야 할 일이 있어요 👍';
+  else box.textContent = '할 일 모두 완료했어요 🎉';
 }
+
 
 /* ---------- 날짜 스트립 ---------- */
 function renderDateStrip(){
@@ -463,3 +473,4 @@ render();
 
 </body>
 </html>
+
