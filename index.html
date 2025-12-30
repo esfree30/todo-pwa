@@ -9,7 +9,6 @@
 
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -18,39 +17,41 @@
       justify-content: center;
       padding: 20px;
     }
-
     .app {
       width: 100%;
       max-width: 420px;
-      background: #ffffff;
+      background: #fff;
       border-radius: 26px;
       padding: 20px 18px 22px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.08);
     }
 
     h1 { text-align:center; margin:6px 0 10px; }
-
     .counter { text-align:center; font-size:13px; color:#5a8f77; margin-bottom:12px; }
 
     .date-strip { display:flex; gap:8px; overflow-x:auto; padding:6px 2px 14px; }
-
     .date-item {
-      min-width:60px; padding:10px 6px 8px; border-radius:16px;
-      background:#f4faf7; border:1px solid #d9efe4;
-      text-align:center; cursor:pointer; font-size:12px;
+      min-width:60px; padding:10px 6px 8px;
+      border-radius:16px;
+      background:#f4faf7;
+      border:1px solid #d9efe4;
+      text-align:center;
+      cursor:pointer;
+      font-size:12px;
       color:#3f7f5f;
     }
-
     .date-item.active { background:#7bcfa3; color:#fff; }
     .date-item.today { outline:2px solid rgba(76,175,143,.5); }
-
     .date-item .num { font-size:17px; font-weight:700; }
-
-    .date-item .dot { width:6px;height:6px;border-radius:50%;margin:4px auto 0;background:#4caf8f; }
+    .date-item .dot {
+      width:6px;height:6px;border-radius:50%;
+      margin:4px auto 0;background:#4caf8f;
+    }
     .date-item .dot.done { background:#b9d8cc; }
 
     #openCalendarBtn {
-      display:block; margin:6px auto 14px; padding:9px 16px;
+      display:block; margin:6px auto 14px;
+      padding:9px 16px;
       border:none; border-radius:999px;
       background:#e3f4ec; color:#2f7d5b;
     }
@@ -75,45 +76,77 @@
       cursor:pointer;
     }
 
-    .clear-completed { width:100%; margin-bottom:14px; background:#e9f6ef; color:#3f7f5f; }
+    .clear-completed {
+      width:100%;
+      margin-bottom:14px;
+      background:#e9f6ef;
+      color:#3f7f5f;
+    }
 
     ul { list-style:none; padding:0; margin:0; }
 
     li {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 10px; border-bottom:1px solid #edf4f1;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 10px;
+      border-bottom:1px solid #edf4f1;
     }
 
     .task { display:flex; align-items:center; gap:10px; flex:1; }
-
     .completed span { text-decoration:line-through; color:#aab7b1; }
 
     .star-btn { background:none; border:none; font-size:20px; color:#f2c94c; }
     .delete-btn { background:none; border:none; font-size:18px; color:#ff6b6b; }
 
     .calendar-overlay {
-      position:fixed; inset:0; background:rgba(0,0,0,.35);
-      display:none; justify-content:center; align-items:center; z-index:999;
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.35);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      z-index:999;
     }
 
     .calendar-modal {
-      background:#fff; border-radius:22px; padding:18px; width:92%; max-width:360px;
+      background:#fff;
+      border-radius:22px;
+      padding:18px;
+      width:92%;
+      max-width:360px;
     }
 
     .calendar-header {
-      display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:12px;
     }
 
-    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; text-align:center; }
+    .calendar-grid {
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:6px;
+      text-align:center;
+    }
 
-    .calendar-cell { padding:10px 0; border-radius:12px; cursor:pointer; }
+    .calendar-cell {
+      padding:10px 0;
+      border-radius:12px;
+      cursor:pointer;
+    }
     .calendar-cell.today { outline:2px solid #7bcfa3; }
     .calendar-cell.selected { background:#7bcfa3; color:#fff; }
 
-    .calendar-cell .dot { width:6px;height:6px;margin:4px auto 0;border-radius:50%;background:#4caf8f; }
+    .calendar-cell .dot {
+      width:6px;height:6px;margin:4px auto 0;
+      border-radius:50%;
+      background:#4caf8f;
+    }
     .calendar-cell .dot.done { background:#b8d7cb; }
   </style>
 </head>
+
 <body>
 
 <div class="calendar-overlay" id="calendarOverlay">
@@ -157,10 +190,10 @@
 </div>
 
 <script>
-// ================= 유틸 =================
-function pad(n){return String(n).padStart(2,'0');}
-function formatDateLocal(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
-function parseDateLocal(str){const [y,m,d]=str.split('-').map(Number);return new Date(y,m-1,d);} 
+/* ================= 유틸 ================= */
+function pad(n){ return String(n).padStart(2,'0'); }
+function formatDateLocal(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function parseDateLocal(str){ const [y,m,d]=str.split('-').map(Number); return new Date(y,m-1,d); }
 
 const STORAGE_KEY = 'todos_v3';
 let todos = [];
@@ -173,28 +206,53 @@ const counter = document.getElementById('counter');
 const input = document.getElementById('todoInput');
 const repeatSelect = document.getElementById('repeatSelect');
 
+/* ---------- 저장 ---------- */
 function saveTodos(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); }
-function loadTodos(){ try{ todos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }catch{ todos=[];} }
+function loadTodos(){
+  try { todos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { todos = []; }
+}
 
+/* ---------- 날짜 매칭 ---------- */
 function matchesDate(todo, dateStr){
   if(todo.repeat === 'none') return todo.date === dateStr;
+
   const base = parseDateLocal(todo.date);
-  const cur = parseDateLocal(dateStr);
+  const cur  = parseDateLocal(dateStr);
+
   if(cur < base) return false;
   if(todo.repeat === 'daily') return true;
   if(todo.repeat === 'weekly') return base.getDay() === cur.getDay();
+
   return false;
 }
 
+/* ---------- 완료 상태 (날짜별) ---------- */
+function isCompletedOnDate(todo, dateStr){
+  if(!todo.completedDates) return false;
+  return todo.completedDates.includes(dateStr);
+}
+
+function setCompletedOnDate(todo, dateStr, value){
+  if(!todo.completedDates) todo.completedDates = [];
+
+  if(value){
+    if(!todo.completedDates.includes(dateStr))
+      todo.completedDates.push(dateStr);
+  } else {
+    todo.completedDates = todo.completedDates.filter(d => d !== dateStr);
+  }
+}
+
+/* ---------- 요약 ---------- */
 function updateSummary(){
   const today = formatDateLocal(new Date());
   const todayTodos = todos.filter(t => matchesDate(t, today));
-  const remaining = todayTodos.filter(t => !t.completed);
-  const important = todayTodos.find(t => t.important && !t.completed);
+  const remaining = todayTodos.filter(t => !isCompletedOnDate(t, today));
+  const important = todayTodos.find(t => t.important && !isCompletedOnDate(t, today));
 
-  document.getElementById('summaryDate').textContent = new Date().toLocaleDateString('ko-KR', {
-    month:'long', day:'numeric', weekday:'short'
-  });
+  document.getElementById('summaryDate').textContent =
+    new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
 
   document.getElementById('summaryRemain').textContent = remaining.length;
 
@@ -204,6 +262,7 @@ function updateSummary(){
   else box.textContent = '오늘 할 일 모두 완료했어요 🎉';
 }
 
+/* ---------- 날짜 스트립 ---------- */
 function renderDateStrip(){
   dateStrip.innerHTML='';
   for(let i=-3;i<=3;i++){
@@ -211,20 +270,23 @@ function renderDateStrip(){
     d.setDate(d.getDate()+i);
     const val = formatDateLocal(d);
 
-    const item=document.createElement('div');
-    item.className='date-item'+(val===selectedDate?' active':'')+(val===formatDateLocal(new Date())?' today':'');
+    const item = document.createElement('div');
+    item.className = 'date-item'
+      + (val===selectedDate?' active':'')
+      + (val===formatDateLocal(new Date())?' today':'');
 
-    const day=document.createElement('div');
-    day.textContent=['일','월','화','수','목','금','토'][d.getDay()];
-    const num=document.createElement('div');
-    num.className='num'; num.textContent=d.getDate();
+    const day = document.createElement('div');
+    day.textContent = ['일','월','화','수','목','금','토'][d.getDay()];
+    const num = document.createElement('div');
+    num.className='num';
+    num.textContent=d.getDate();
 
     item.append(day,num);
 
-    const related=todos.filter(t=>matchesDate(t,val));
+    const related = todos.filter(t=>matchesDate(t,val));
     if(related.length){
       const dot=document.createElement('div');
-      dot.className='dot'+(related.every(t=>t.completed)?' done':'');
+      dot.className='dot'+(related.every(t=>isCompletedOnDate(t,val))?' done':'');
       item.appendChild(dot);
     }
 
@@ -233,6 +295,7 @@ function renderDateStrip(){
   }
 }
 
+/* ---------- 월 달력 ---------- */
 function renderMonthCalendar(){
   const grid=document.getElementById('calendarGrid');
   const title=document.getElementById('calendarTitle');
@@ -250,6 +313,7 @@ function renderMonthCalendar(){
   for(let d=1;d<=last;d++){
     const dateObj=new Date(y,m,d);
     const dateStr=formatDateLocal(dateObj);
+
     const cell=document.createElement('div');
     cell.className='calendar-cell';
     cell.textContent=d;
@@ -260,7 +324,7 @@ function renderMonthCalendar(){
     const related=todos.filter(t=>matchesDate(t,dateStr));
     if(related.length){
       const dot=document.createElement('div');
-      dot.className='dot'+(related.every(t=>t.completed)?' done':'');
+      dot.className='dot'+(related.every(t=>isCompletedOnDate(t,dateStr))?' done':'');
       cell.appendChild(dot);
     }
 
@@ -275,6 +339,7 @@ function renderMonthCalendar(){
   }
 }
 
+/* ---------- 렌더 ---------- */
 function render(){
   updateSummary();
   list.innerHTML='';
@@ -283,12 +348,15 @@ function render(){
   let visible=todos.filter(t=>matchesDate(t,selectedDate));
 
   if(selectedDate===today){
-    visible=[...visible].sort((a,b)=>a.completed-b.completed);
+    visible=[...visible].sort(
+      (a,b)=>isCompletedOnDate(a,selectedDate)-isCompletedOnDate(b,selectedDate)
+    );
   }
 
   visible.forEach(t=>{
     const li=document.createElement('li');
-    if(t.completed) li.classList.add('completed');
+
+    if(isCompletedOnDate(t,selectedDate)) li.classList.add('completed');
 
     if(selectedDate===today){
       li.style.background='#f3fbf7';
@@ -301,8 +369,12 @@ function render(){
 
     const cb=document.createElement('input');
     cb.type='checkbox';
-    cb.checked=t.completed;
-    cb.onchange=()=>{ t.completed=cb.checked; saveTodos(); render(); };
+    cb.checked=isCompletedOnDate(t,selectedDate);
+    cb.onchange=()=>{
+      setCompletedOnDate(t,selectedDate,cb.checked);
+      saveTodos();
+      render();
+    };
 
     const span=document.createElement('span');
     span.textContent=t.text;
@@ -317,15 +389,20 @@ function render(){
     const del=document.createElement('button');
     del.className='delete-btn';
     del.textContent='✕';
-    del.onclick=()=>{ todos=todos.filter(x=>x!==t); saveTodos(); render(); };
+    del.onclick=()=>{
+      todos = todos.filter(x=>x!==t);
+      saveTodos();
+      render();
+    };
 
     li.append(task,star,del);
     list.appendChild(li);
   });
 
-  counter.textContent=`남은 할 일: ${visible.filter(t=>!t.completed).length}개`;
+  counter.textContent = `남은 할 일: ${visible.filter(t=>!isCompletedOnDate(t,selectedDate)).length}개`;
 }
 
+/* ---------- 추가 ---------- */
 function addTodo(){
   const text=input.value.trim();
   if(!text) return;
@@ -333,10 +410,10 @@ function addTodo(){
   todos.push({
     id: crypto.randomUUID(),
     text,
-    completed:false,
+    date: selectedDate,
+    repeat: repeatSelect.value,
     important:false,
-    date:selectedDate,
-    repeat: repeatSelect.value
+    completedDates:[]
   });
 
   input.value='';
@@ -345,13 +422,16 @@ function addTodo(){
   render();
 }
 
-// 이벤트
-document.getElementById('addBtn').onclick=addTodo;
+/* ---------- 이벤트 ---------- */
+document.getElementById('addBtn').onclick = addTodo;
 input.addEventListener('keydown',e=>{ if(e.key==='Enter') addTodo(); });
 
 document.getElementById('clearCompletedBtn').onclick=()=>{
-  todos = todos.filter(t=>!(matchesDate(t,selectedDate) && t.completed));
-  saveTodos(); render();
+  todos = todos.filter(t =>
+    !(matchesDate(t,selectedDate) && isCompletedOnDate(t,selectedDate))
+  );
+  saveTodos();
+  render();
 };
 
 const overlay=document.getElementById('calendarOverlay');
@@ -361,7 +441,9 @@ document.getElementById('openCalendarBtn').onclick=()=>{
   renderMonthCalendar();
 };
 
-overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.style.display='none'; });
+overlay.addEventListener('click',e=>{
+  if(e.target===overlay) overlay.style.display='none';
+});
 
 document.getElementById('prevMonth').onclick=()=>{
   calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);
@@ -373,10 +455,11 @@ document.getElementById('nextMonth').onclick=()=>{
   renderMonthCalendar();
 };
 
-// 초기화
+/* 초기화 */
 loadTodos();
 renderDateStrip();
 render();
 </script>
+
 </body>
 </html>
